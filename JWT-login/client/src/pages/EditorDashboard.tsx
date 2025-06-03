@@ -1,0 +1,25 @@
+// frontend/src/pages/EditorDashboard.tsx
+import React from 'react';
+import api from '../api';
+import { useNavigate } from 'react-router-dom';
+
+export default function EditorDashboard() {
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout'); // call backend logout
+      localStorage.removeItem('token'); // remove token from storage
+      navigate('/login'); // redirect to login page
+    } catch (err) {
+      console.error('Logout failed', err);
+    }
+  };
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>Editor Dashboard</h1>
+      <p>This page is for editors only.</p>
+      <button onClick={handleLogout}>Logout</button>
+    </div>
+  );
+}
