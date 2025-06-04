@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from "react";
-import { Link } from "react-router-dom"; // ← Add this
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import { Link } from "react-router-dom";
 import Webcam from "react-webcam";
+import { fetchUserById } from "./api/api.js";
 
 const videoConstraints = {
   width: 320,
@@ -11,13 +12,18 @@ const videoConstraints = {
 const RegistrationForm: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
   const [uniqueId, setUniqueId] = useState("");
-  const [schoolId, setSchoolId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
+  const [instituteId, setInstituteId] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [capturedFace, setCapturedFace] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // New state for error message
+  const [errorMessage, setErrorMessage] = useState("");
 
   const capture = useCallback(() => {
     if (webcamRef.current) {
@@ -29,15 +35,48 @@ const RegistrationForm: React.FC = () => {
     }
   }, []);
 
-  const handleGetData = () => {
-    alert(`Fetching data for Unique ID: ${uniqueId}`);
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage("");
+      }, 4000); // Clear error after 4 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
+  const handleGetData = async () => {
+    if (!uniqueId.trim()) {
+      setErrorMessage("Please enter a Unique ID");
+      return;
+    }
+    setLoading(true);
+    try {
+      const userData = await fetchUserById(uniqueId.trim());
+      if (!userData) {
+        throw new Error("User not found");
+      }
+      setDepartmentId(userData.dept_id || "");
+      setInstituteId(userData.institute_id || "");
+      setEmail(userData.email || "");
+      setPhone(userData.mobile_no || "");
+      setName(userData.full_name || "");
+    } catch (error) {
+      setErrorMessage("User not found or error fetching data");
+      setDepartmentId("");
+      setInstituteId("");
+      setEmail("");
+      setPhone("");
+      setName("");
+    }
+    setLoading(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log({
       uniqueId,
-      schoolId,
+      departmentId,
+      instituteId,
       email,
       phone,
       name,
@@ -86,23 +125,35 @@ const RegistrationForm: React.FC = () => {
                 type="button"
                 onClick={handleGetData}
                 style={styles.getDataButton}
+                disabled={loading}
               >
-                Get Data
+                {loading ? "Loading..." : "Get Data"}
               </button>
             </div>
           </div>
 
           <div style={styles.inputGroup}>
-            <label htmlFor="schoolId" style={styles.label}>
-              School ID
+            <label htmlFor="departmentId" style={styles.label}>
+              Department ID
             </label>
             <input
-              id="schoolId"
+              id="departmentId"
               type="text"
-              value={schoolId}
-              onChange={(e) => setSchoolId(e.target.value)}
-              placeholder="Enter school ID"
-              required
+              value={departmentId}
+              readOnly
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label htmlFor="instituteId" style={styles.label}>
+              Institute ID
+            </label>
+            <input
+              id="instituteId"
+              type="text"
+              value={instituteId}
+              readOnly
               style={styles.input}
             />
           </div>
@@ -115,9 +166,7 @@ const RegistrationForm: React.FC = () => {
               id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email"
-              required
+              readOnly
               style={styles.input}
             />
           </div>
@@ -130,9 +179,7 @@ const RegistrationForm: React.FC = () => {
               id="phone"
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Enter phone number"
-              required
+              readOnly
               style={styles.input}
             />
           </div>
@@ -145,9 +192,7 @@ const RegistrationForm: React.FC = () => {
               id="name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter full name"
-              required
+              readOnly
               style={styles.input}
             />
           </div>
@@ -192,7 +237,14 @@ const RegistrationForm: React.FC = () => {
               videoConstraints={videoConstraints}
               style={{ borderRadius: 16 }}
             />
-            <div style={{ marginTop: 12, display: "flex", gap: 12, justifyContent: "center" }}>
+            <div
+              style={{
+                marginTop: 12,
+                display: "flex",
+                gap: 12,
+                justifyContent: "center",
+              }}
+            >
               <button onClick={capture} style={styles.captureButton}>
                 Capture
               </button>
@@ -204,6 +256,13 @@ const RegistrationForm: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Error box at bottom right */}
+      {errorMessage && (
+        <div style={styles.errorBox}>
+          <p>{errorMessage}</p>
         </div>
       )}
     </>
@@ -345,6 +404,22 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: "600",
     textDecoration: "none",
     marginLeft: 6,
+  },
+
+  // New styles for error box
+  errorBox: {
+    position: "fixed",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#e74c3c",
+    color: "#fff",
+    padding: "0px 15px",
+    borderRadius: 8,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    fontWeight: "600",
+    zIndex: 1100,
+    maxWidth: 300,
+    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   },
 };
 
