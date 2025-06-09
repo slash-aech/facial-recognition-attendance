@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import FaceLogin from './face-login';
-import RegistrationForm from './Register';
+import FaceLogin from './assets/Pages/face-login';
+import RegistrationForm from './assets/Pages/Register';
 
 function App() {
   return (
