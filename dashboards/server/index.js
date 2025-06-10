@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cookieParser());
 app.use(cors({
-  origin: 'https://facial-recognition-attendance-3wlw.onrender.com',
+  origin: 'https://onrender.com',
   credentials: true
 }));
 app.use(express.json());
