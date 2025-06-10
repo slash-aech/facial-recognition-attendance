@@ -23,11 +23,11 @@ export async function changePassword(user_info_id, newPassword) {
 
 export async function checkFaceRegistered(base64Image) {
   if (!base64Image) throw new Error("Base64 image required");
-  
+
   const response = await axios.post(`${BASE_URL}/face/check`, {
     base64Image
   });
-  
+
   return response.data;
 }
 
@@ -36,7 +36,7 @@ export async function registerFace({ subject, base64Image, email, password }) {
   if (!subject || !base64Image || !email || !password) {
     throw new Error("subject, base64Image, email and password are required");
   }
-  
+
   const response = await axios.post(`${BASE_URL}/face/register`, {
     subject,
     base64Image,
@@ -49,13 +49,15 @@ export async function registerFace({ subject, base64Image, email, password }) {
 
 export async function faceLogin(base64Image) {
   try {
-    const response = await axios.post(BASE_URL+'/user/face-login', {
+    const response = await axios.post(BASE_URL + '/user/face-login', {
       image: base64Image
     }, {
       headers: { 'Content-Type': 'application/json' }
     });
     console.log('Login success:', response.data);
+    return response.data
   } catch (error) {
     console.error('Login error:', error.response?.data || error.message);
+    return error
   }
 }

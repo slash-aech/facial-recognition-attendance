@@ -55,22 +55,19 @@ const FaceLogin: React.FC = () => {
         const resizedResult = faceapi.resizeResults(result, dims);
         faceapi.draw.drawDetections(canvas, resizedResult);
 
-        if (loggingIn) return; // Prevent multiple login requests
+        if (loggingIn) return;
 
         setLoggingIn(true);
         try {
-          // Capture face frame as base64 (without data URL prefix)
           const faceBase64 = getScreenshot(video);
-
-          // API call — expects the response to return data directly (no nested `data`)
           const response = await faceLogin(faceBase64);
-
-          // Save token and user info from response
+          console.log(response.token)
+          // ✅ Save token and user info
           localStorage.setItem('userToken', response.token);
           localStorage.setItem('userInfo', JSON.stringify(response.user));
 
           setStatus('Login successful!');
-          navigate('/account'); // Redirect to account/dashboard
+          navigate('/'); // Redirect to home page
         } catch (err: any) {
           console.error(err);
           setStatus(err.response?.data?.message || 'Face login failed');
@@ -88,14 +85,13 @@ const FaceLogin: React.FC = () => {
     return () => clearInterval(interval);
   }, [loggingIn, navigate]);
 
-  // Capture screenshot from video as base64 without prefix
   const getScreenshot = (video: HTMLVideoElement): string => {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg').split(',')[1]; // return base64 only
+    return canvas.toDataURL('image/jpeg').split(',')[1];
   };
 
   return (

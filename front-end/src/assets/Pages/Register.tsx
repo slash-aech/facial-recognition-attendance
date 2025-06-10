@@ -139,7 +139,7 @@ const RegistrationForm: React.FC = () => {
 
       setDepartmentId(userData.dept_id || "");
       setInstituteId(userData.institute_id || "");
-      setEmail(userData.email || "");
+      setEmail(userData.email_id || "");
       setUserRole(userData.user_role || "");
       setPhone(userData.mobile_no || "");
       setName(userData.full_name || "");

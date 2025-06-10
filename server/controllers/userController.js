@@ -13,8 +13,7 @@ const getUserById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await db.query('SELECT * FROM user_info WHERE id = $1', [id]);
-    
+    const result = await db.query('SELECT * FROM user_info WHERE enrollment_number = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -27,30 +26,50 @@ const getUserById = async (req, res) => {
 };
 
 const changePasswordByUserInfoId = async (req, res) => {
+  console.log("******************************************************");
   const { user_info_id, newPassword } = req.body;
+  console.log(req.body);
 
-  if (!user_info_id || !newPassword) {
-    return res.status(400).json({ message: 'user_info_id and newPassword are required' });
-  }
+  // if (!enrollment_number || !newPassword) {
+  //   return res.status(400).json({ message: 'enrollment_number and newPassword are required' });
+  // }
 
   try {
+    // 1. Get user_info.id (UUID) from enrollment_number
+    const userInfoResult = await db.query(
+      'SELECT id FROM user_info WHERE enrollment_number = $1',
+      [user_info_id]
+    );
+    if (userInfoResult.rowCount === 0) {
+      return res.status(404).json({ message: 'User with given enrollment number not found' });
+    }
+
+    const userInfoId = userInfoResult.rows[0].id;
+
+    // 2. Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+    // 3. Update the password in user_authentication using user_info_id (UUID)
     const result = await db.query(
-      'UPDATE auth SET password = $1 WHERE user_info_id = $2 RETURNING id, username',
-      [hashedPassword, user_info_id]
+      'UPDATE user_authentication SET password = $1 WHERE user_info_id = $2 RETURNING auth_id, email_id',
+      [hashedPassword, userInfoId]
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'Auth record not found for given user_info_id' });
+      return res.status(404).json({ message: 'Authentication record not found for this user' });
     }
 
-    res.json({ message: 'Password updated successfully', user: result.rows[0] });
+    res.json({
+      message: 'Password updated successfully',
+      user: result.rows[0],
+    });
   } catch (error) {
     console.error('Error updating password:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
 
 const faceLogin = async (req, res) => {
   const { image } = req.body;
@@ -59,12 +78,10 @@ const faceLogin = async (req, res) => {
   }
 
   try {
-    // Create HTTPS agent that ignores invalid SSL certs (for dev only)
-    const httpsAgent = new https.Agent({
-      rejectUnauthorized: false,
-    });
+    // Allow self-signed certificate (for development only)
+    const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-    // 1. Call Python face recognition API with custom httpsAgent
+    // 1. Send image to face recognition API
     const response = await axios.post(
       process.env.FACE_API_URL + '/run-simple-face-check',
       { image },
@@ -72,55 +89,66 @@ const faceLogin = async (req, res) => {
     );
 
     const result = response.data;
-    if (!result.result || !result.result[0] || !result.result[0].subjects || result.result[0].subjects.length === 0) {
+
+    // 2. Check if a subject was returned
+    if (
+      !result.result || 
+      !Array.isArray(result.result) || 
+      !result.result[0]?.subjects?.length
+    ) {
       return res.status(401).json({ message: 'Face not recognized' });
     }
 
-    // 2. Decode base64 subject to get email & password
+    // 3. Decode base64 subject data
     const base64Subject = result.result[0].subjects[0].subject;
-    const decodedSubject = Buffer.from(base64Subject, 'base64').toString('utf-8');
-    const parsedSubject = JSON.parse(decodedSubject);
-    // console.log(decodedSubject)
-    const { Email: email, Pass: plainPassword } = parsedSubject;
-    console.log(parsedSubject)
+    const decoded = Buffer.from(base64Subject, 'base64').toString('utf-8');
+    const parsed = JSON.parse(decoded);
+    const { Email: email, Pass: plainPassword } = parsed;
+
     if (!email || !plainPassword) {
-      return res.status(400).json({ message: 'Email or password not found in subject data' });
+      return res.status(400).json({ message: 'Invalid subject data' });
     }
-    // console.log(email, password)
-    // 3. Get user_info record
-    const userQuery = await db.query('SELECT * FROM user_info WHERE email = $1', [email]);
+    console.log(email)
+    // 4. Look up user by email
+    const userQuery = await db.query(
+      'SELECT * FROM user_info WHERE email_id = $1',
+      [email]
+    );
     if (userQuery.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-
     const userInfo = userQuery.rows[0];
-    // 4. Get password from auth table using user_info.id
-    const authQuery = await db.query('SELECT * FROM auth WHERE user_info_id = $1', [userInfo.id]);
+    console.log(userInfo)
+    // 5. Get hashed password from user_authentication
+    const authQuery = await db.query(
+      'SELECT * FROM user_authentication WHERE user_info_id = $1',
+      [userInfo.id]
+    );
     if (authQuery.rows.length === 0) {
-      return res.status(404).json({ message: 'Auth info not found' });
+      return res.status(404).json({ message: 'Authentication record not found' });
     }
-
     const authInfo = authQuery.rows[0];
 
-    // 5. Verify face-extracted password with hashed password in DB
-    const isPasswordMatch = await bcrypt.compare(plainPassword, authInfo.password);
-    console.log(isPasswordMatch)
-    if (!isPasswordMatch) {
-      return res.status(401).json({ message: 'Authentication failed: Incorrect password' });
+    // 6. Compare extracted password with hashed one
+    console.log(plainPassword, authInfo.password)
+    const isMatch = await bcrypt.compare(plainPassword, authInfo.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Authentication failed' });
     }
-
-    // 6. Generate JWT
-    const token = jwt.sign({ id: userInfo.id, email: userInfo.email }, JWT_SECRET, {
-      expiresIn: '30d',
-    });
-
+    // 7. Generate token
+    const token = jwt.sign(
+      { id: userInfo.id, email: userInfo.email_id, role: userInfo.user_role },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
     return res.status(200).json({
       message: 'Face login successful',
       token,
       user: {
         id: userInfo.id,
-        email: userInfo.email,
-        name: userInfo.name,
+        email: userInfo.email_id,
+        name: userInfo.full_name,
+        role: userInfo.user_role,
       },
     });
   } catch (error) {
@@ -128,6 +156,5 @@ const faceLogin = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
-
 
 module.exports = { getUserById, changePasswordByUserInfoId, faceLogin };
