@@ -9,7 +9,7 @@ const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, role: user.role },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: '1h' }  // Token expires in 1 hour
+    { expiresIn: '1h' }
   );
 };
 
@@ -19,33 +19,52 @@ router.post('/register', async (req, res) => {
 
   try {
     const hashed = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (email, password, role) VALUES (?, ?, ?)', [email, hashed, role]);
-    res.status(201).json({ message: 'User registered' });
-  } catch (err) {
+    await pool.query(
+        'INSERT INTO users (email, password, role) VALUES ($1, $2, $3)',
+        [email, hashed, role]
+    );
+    res.status(201).json({ success: true, message: 'User registered' });
+} catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Registration failed' });
-  }
+    
+    // Specific error messages
+    let errorMessage = 'Registration failed';
+    if (err.code === '23505') { // Unique violation (duplicate email)
+        errorMessage = 'Email already exists';
+    } else if (err.code === '23502') { // Not null violation
+        errorMessage = 'Missing required fields';
+    }
+
+    res.status(400).json({ 
+        success: false, 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+}
 });
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    const user = rows[0];
+   const [rows] = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = rows;
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+if (!user || !(await bcrypt.compare(password, user.password))) {
+  return res.status(401).json({ error: 'Invalid credentials' });
+}
 
-    const token = generateToken(user);
-    res.cookie('accessToken', token, {
-      httpOnly: true,
-      sameSite: 'Strict',
-      maxAge: 60 * 60 * 1000,  // 1 hour in milliseconds
-    });
+const token = generateToken({ id: user.id, role: user.role }); // this is important
 
-    res.json({ role: user.role });
+res.cookie('token', token, {
+  httpOnly: true,
+  secure: false,
+  sameSite: 'lax',
+  maxAge: 15 * 60 * 1000, // 15 minutes
+});
+
+res.json({ role: user.role });
+;  
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
@@ -53,24 +72,27 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('accessToken');
+  res.clearCookie('token');
   res.sendStatus(201);
 });
 
 
 router.get('/check', authenticateToken, (req, res) => {
-  // Returns user info if token is valid
-  res.json({ id: req.user.id, role: req.user.role });
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  console.log(req.user)
+  res.json({ role: req.user.role });  // ✅ Important: send something back
 });
 
-// router.get('/classrooms', authenticateToken, async (req, res) => {
-//   try {
-//     const [rows] = await pool.query('SELECT * FROM classrooms');
-//     res.json(rows);
-//   } catch (err) {
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// });
+router.get('/classrooms', authenticateToken, async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM classrooms');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 router.post('/attendance/mark', authenticateToken, authorizeRole('student'), async (req, res) => {
   const { classroomId, latitude, longitude } = req.body;

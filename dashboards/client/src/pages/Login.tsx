@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api';
+import '../styles/Login.css'
 
 export default function Login({
   onLogin,
@@ -22,15 +23,56 @@ export default function Login({
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-      <input value={password} type="password" onChange={e => setPassword(e.target.value)} placeholder="Password" />
-      <button onClick={handleLogin}>Login</button>
-      <p>{message}</p>
-      <p>
-        Don’t have an account? <button onClick={onSwitchToRegister}>Register here</button>
-      </p>
+    <div className="auth-container">
+  <div className="auth-card">
+    <h1 className="auth-title">Welcome Back</h1>
+    <p className="auth-subtitle">Sign in to access your account</p>
+    
+    <div className="auth-form">
+      <div className="input-group">
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="your@email.com"
+          className="auth-input"
+        />
+      </div>
+      
+      <div className="input-group">
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="••••••••"
+          className="auth-input"
+        />
+      </div>
+      
+      <button 
+        onClick={handleLogin}
+        className="auth-button primary"
+      >
+        Login
+      </button>
+      
+      {message && <p className="auth-message">{message}</p>}
     </div>
+    
+    <div className="auth-footer">
+      <p>Don't have an account?</p>
+      <button 
+        onClick={onSwitchToRegister}
+        className="auth-button text-button"
+      >
+        Register here
+      </button>
+    </div>
+  </div>
+</div>
   );
 }

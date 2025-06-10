@@ -16,10 +16,10 @@ router.post('/mark', authenticateToken, async (req, res) => {
   }
 
   try {
-    const [[userRow]] = await pool.query('SELECT email FROM users WHERE id = ?', [user.id]);
+    const [[userRow]] = await pool.query('SELECT email FROM users WHERE id = $1', [user.id]);
     const studentEmail = userRow.student_email;
 
-    await pool.query('INSERT INTO attendance (student_id, classroom_id, latitude, longitude, student_email) VALUES (?, ?, ?, ?, ?)',
+    await pool.query('INSERT INTO attendance (student_id, classroom_id, latitude, longitude, student_email) VALUES ($1, $2, $3, $4, $5)',
     [user.id, classroom_id, latitude, longitude, studentEmail]
 );
     res.json({ message: 'Attendance marked successfully' });

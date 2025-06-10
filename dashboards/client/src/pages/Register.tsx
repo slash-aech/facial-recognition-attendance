@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../api';
+import '../styles//Register.css'
 
 export default function Register({
   onSwitchToLogin,
@@ -21,22 +22,69 @@ export default function Register({
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-      <input value={password} type="password" onChange={e => setPassword(e.target.value)} placeholder="Password" />
-      <select value={role} onChange={e => setRole(e.target.value)}>
+    <div className="auth-container" style={{ padding: 0 }}>
+  <form className="auth-form" onSubmit={handleRegister}>
+    <h1 className="auth-title">Create Account</h1>
+    <p className="auth-subtitle">Join our platform today</p>
+
+    <div className="input-group">
+      <input
+        name="mail"
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+        className="auth-input"
+      />
+    </div>
+
+    <div className="input-group">
+      <input
+        name="pass"
+        type="password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        placeholder="Password"
+        required
+        className="auth-input"
+      />
+    </div>
+
+    <div className="input-group">
+      <select
+        name="role"
+        value={role}
+        onChange={e => setRole(e.target.value)}
+        required
+        className="auth-select"
+      >
+        <option value="">Select Role</option>
         <option value="student">Student</option>
         <option value="teacher">Teacher</option>
         <option value="admin">Admin</option>
         <option value="hod">HOD</option>
         <option value="superadmin">Superadmin</option>
       </select>
-      <button onClick={handleRegister}>Register</button>
-      <p>{message}</p>
-      <p>
-        Already have an account? <button onClick={onSwitchToLogin}>Login here</button>
-      </p>
     </div>
+
+    <button type="submit" className="auth-button primary">
+      Register
+    </button>
+
+    {message && <p className="auth-message">{message}</p>}
+
+    <div className="auth-footer">
+      <p>Already have an account?</p>
+      <button 
+        type="button" 
+        onClick={onSwitchToLogin}
+        className="auth-button text-button"
+      >
+        Login here
+      </button>
+    </div>
+  </form>
+</div>
   );
 }

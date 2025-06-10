@@ -7,10 +7,17 @@ export default function StudentDashboard() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    api.get<Classroom[]>('/classrooms')
-      .then(res => setClassrooms(res.data))
-      .catch(() => setMessage('Failed to load classrooms'));
+   useEffect(() => {
+  api.get('/classrooms')
+    .then(res => {
+      // console.log('DATA:', res.data);
+      if (Array.isArray(res.data)) {
+        setClassrooms(res.data);
+      } else {
+        setClassrooms([res.data]); // or res.data.classrooms if wrapped
+      }
+    })
+    .catch(() => setMessage('Failed to load classrooms'));
   }, []);
 
   const markAttendance = (classroom: Classroom) => {
@@ -43,7 +50,7 @@ export default function StudentDashboard() {
       <h2>Student Dashboard</h2>
       {message && <p>{message}</p>}
       <ul>
-        {classrooms.map(c => (
+        {classrooms?.map(c => (
           <li key={c.id}>
             {c.name} - Radius: {c.radius} meters &nbsp;
             <button onClick={() => markAttendance(c)}>Mark Attendance</button>
