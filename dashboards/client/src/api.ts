@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:4000/api', // your backend URL
+  baseURL: 'https://facial-recognition-attendance-backend.onrender.com', // your backend URL
   withCredentials: true,  // important to send cookies
 });
 
