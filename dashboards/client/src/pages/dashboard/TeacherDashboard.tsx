@@ -2,7 +2,7 @@ import  { useEffect, useState } from 'react';
 import LogoutButton from '../../components/LogoutButton';
 import api from '../../api';
 import type { Classroom, AttendanceRecord } from '../../types';
-import '../../styles/SuperAdminDashboard.css'
+import '../'
 
 export default function SuperadminDashboard() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);

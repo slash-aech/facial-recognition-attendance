@@ -1,5 +1,5 @@
 // frontend/src/pages/Home.tsx
-import React from 'react';
+// import React from 'react';
 import '../styles/Home.css'
 
 interface HomeProps {
