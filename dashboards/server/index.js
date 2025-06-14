@@ -35,9 +35,9 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/timetable', timetableRoutes);
 app.use('/api/student', studentUploadRoutes);
 app.use('/api/faculty', facultyUploadRoutes);
-app.use('/', userRouters);
-app.use('/face', faceRouter);
-app.use('/api', protectedRoute);
+app.use('/api', userRouters);
+app.use('/api/face', faceRouter);
+app.use('/api/api', protectedRoute);
 
 
 app.listen(process.env.PORT, () => {
