@@ -103,10 +103,11 @@ useEffect(() => {
       alert('Geolocation not supported');
       return;
     }
-
+    console.log("Hey you actually did something");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
+        console.log("good lord it is working until it isn't");
         const radiusInput = prompt('Enter attendance radius in meters (default: 100):', '100');
         const radius = parseInt(radiusInput || '100', 10);
 
