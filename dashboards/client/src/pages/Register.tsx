@@ -51,8 +51,8 @@ const RegistrationForm: React.FC = () => {
   }, [errorMessage]);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
+    let intervalId: ReturnType<typeof setInterval>;
+    
     if (isModalOpen && webcamRef.current && canvasRef.current) {
       const video = webcamRef.current.video as HTMLVideoElement;
       const canvas = canvasRef.current;
