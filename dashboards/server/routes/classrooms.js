@@ -29,8 +29,8 @@ router.get('/', authenticateToken, async (req, res) => {
 
 router.get('/all', authenticateToken, async (req, res) => {
   const user = req.user;
-  if (user.role !== 'superadmin') {
-    return res.status(403).json({ error: 'Unauthorized' });
+  if (user.role == 'student') {
+    return res.status(403).json({ error: 'students not allowed' });
   }
 
   try {
@@ -48,7 +48,7 @@ router.patch('/:id/start', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const user = req.user;
 
-  if (user.role !== 'superadmin') {
+  if (user.role == 'student') {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
@@ -69,7 +69,7 @@ router.patch('/:id/stop', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const user = req.user;
 
-  if (user.role !== 'superadmin') {
+  if (user.role == 'student') {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
