@@ -59,7 +59,7 @@ const token = generateToken({ id: user.email, role: user.role }); // this is imp
 res.cookie('token', token, {
   httpOnly: true,
   secure: false,
-  sameSite: 'lax',
+  sameSite: 'None',
   maxAge: 60 * 60 * 1000, // 15 minutes
 });
 
