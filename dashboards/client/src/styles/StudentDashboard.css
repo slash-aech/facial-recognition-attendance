@@ -1,0 +1,90 @@
+/* === STUDENT DASHBOARD === */
+.student-dashboard {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #e0e0e0;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.gradient-title {
+
+.notification-bubble {
+  padding: 1rem;
+  background: rgba(255, 59, 48, 0.2);
+  border-left: 4px solid #16fc21;
+  margin-bottom: 2rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+  font-size: 2rem;
+  background: linear-gradient(90deg, #8a2be2, #00bfff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+.title-highlight {
+  font-weight: 700;
+}
+
+.student-dashboard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.student-dashboard li {
+  background: rgba(255, 255, 255, 0.03);
+  margin: 2rem;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #c9d1d9;
+  transition: background 0.3s ease;
+}
+
+.student-dashboard li:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.student-dashboard button {
+  background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+  border: none;
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.student-dashboard button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 198, 255, 0.3);
+}
+
+.student-dashboard p {
+  background: rgba(52, 199, 89, 0.2);
+  padding: 1rem;
+  border-left: 4px solid #34c759;
+  border-radius: 6px;
+  color: #d1fae5;
+  margin-bottom: 1.5rem;
+}

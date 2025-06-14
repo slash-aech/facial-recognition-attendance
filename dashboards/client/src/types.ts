@@ -1,4 +1,5 @@
 export interface Classroom {
+  is_active: boolean;
   id: number;
   name: string;
   latitude: number;

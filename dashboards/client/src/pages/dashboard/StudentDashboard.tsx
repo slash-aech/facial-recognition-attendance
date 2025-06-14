@@ -1,23 +1,24 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../api';
 import type { Classroom } from '../../types';
-import LogoutButton from '../../components/LogoutButton'
+import LogoutButton from '../../components/LogoutButton';
+import '../../styles/StudentDashboard.css';
 
 export default function StudentDashboard() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true); // ✅ Track loading status
 
-   useEffect(() => {
-  api.get('/classrooms')
-    .then(res => {
-      // console.log('DATA:', res.data);
-      if (Array.isArray(res.data)) {
-        setClassrooms(res.data);
-      } else {
-        setClassrooms([res.data]); // or res.data.classrooms if wrapped
-      }
-    })
-    .catch(() => setMessage('Failed to load classrooms'));
+  useEffect(() => {
+    setMessage('Mark attendance in following class');
+
+    api.get('/classrooms')
+      .then(res => {
+        const data = Array.isArray(res.data) ? res.data : [res.data];
+        setClassrooms(data);
+      })
+      .catch(() => setMessage('Failed to load classrooms'))
+      .finally(() => setLoading(false)); // ✅ Mark loading as complete
   }, []);
 
   const markAttendance = (classroom: Classroom) => {
@@ -25,39 +26,58 @@ export default function StudentDashboard() {
       alert('Geolocation not supported');
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       pos => {
         const { latitude, longitude } = pos.coords;
-        
+
         api.post('/attendance/mark', {
           classroom_id: classroom.id,
           latitude,
           longitude
         })
-        
-        .then(() => setMessage(`Attendance marked for ${classroom.name}`))
+        .then(() => {
+          setMessage(`Attendance marked for ${classroom.name}`);
+          setLoading(true); // reload classrooms
+          return api.get('/classrooms');
+        })
+        .then(res => {
+          const data = Array.isArray(res.data) ? res.data : [res.data];
+          setClassrooms(data);
+        })
         .catch(err => {
           if (err.response?.data?.error) setMessage(err.response.data.error);
           else setMessage('Failed to mark attendance');
-        });
+        })
+        .finally(() => setLoading(false));
       },
-      () => alert('Location permission required to mark attendance')
+      () => alert('Some error occured, try checking location settings')
     );
   };
 
   return (
-    <div>
-      <h2>Student Dashboard</h2>
-      {message && <p>{message}</p>}
-      <ul>
-        {classrooms?.map(c => (
-          <li key={c.id}>
-            {c.name} - Radius: {c.radius} meters &nbsp;
-            <button onClick={() => markAttendance(c)}>Mark Attendance</button>
-          </li>
-        ))}
-      </ul>
-            <LogoutButton/>
+    <div className="student-dashboard">
+      <header className="dashboard-header">
+        <h1 className="gradient-title">
+          <span className="title-highlight">Student</span> Dashboard
+        </h1>
+        <LogoutButton />
+      </header>
+
+      {message && <div className="notification-bubble">{message}</div>}
+
+      {loading ? (
+        <p>Loading classrooms...</p>
+      ) :(
+        <ul>
+          {classrooms.filter(c => c.id).map(c => (
+  <li key={c.id}>
+    {c.name}
+    <button onClick={() => markAttendance(c)}>Mark Attendance</button>
+  </li>
+))}
+        </ul>
+      )}
     </div>
   );
 }

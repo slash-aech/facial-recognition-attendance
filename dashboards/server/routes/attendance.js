@@ -3,25 +3,48 @@ const router = express.Router();
 const pool = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 
+
+function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000; // Earth radius in meters
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+
+
 // POST /api/attendance/mark
 router.post('/mark', authenticateToken, async (req, res) => {
   const { classroom_id, latitude, longitude } = req.body;
-  console.log('MARK request body:', req.body);
   const user = req.user;
-  console.log('User from token:', user);
-
+  // console.log("This is user \n", user);
 
   if (user.role !== 'student') {
     return res.status(403).json({ error: 'Only students can mark attendance' });
   }
 
   try {
-    const [[userRow]] = await pool.query('SELECT email FROM users WHERE id = $1', [user.id]);
-    const studentEmail = userRow.student_email;
+    const [classroomRows] = await pool.query('SELECT latitude, longitude, radius FROM classrooms WHERE id = $1 AND is_active = true', [classroom_id]);
+    if (classroomRows.length === 0) {
+      return res.status(400)  .json({ error: 'Attendance not active or invalid classroom' });
+    }
+    const { latitude: cLat, longitude: cLng, radius } = classroomRows;
 
-    await pool.query('INSERT INTO attendance (student_id, classroom_id, latitude, longitude, student_email) VALUES ($1, $2, $3, $4, $5)',
-    [user.id, classroom_id, latitude, longitude, studentEmail]
-);
+    const distance = getDistanceFromLatLonInMeters(cLat, cLng, latitude, longitude);
+    if (distance > radius) {
+      return res.status(400).json({ error: 'You are not within allowed range to mark attendance' });
+    }
+    await pool.query(
+      'INSERT INTO attendance (student_id, classroom_id, latitude, longitude, timestamp) VALUES ($1, $2, $3, $4, NOW())',
+      [user.id, classroom_id, latitude, longitude]
+    );  
     res.json({ message: 'Attendance marked successfully' });
   } catch (err) {
     console.error(err);

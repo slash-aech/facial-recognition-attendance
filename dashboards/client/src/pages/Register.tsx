@@ -10,11 +10,12 @@ export default function Register({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+  const [department, setdepartment] = useState('');
   const [message, setMessage] = useState('');
 
   const handleRegister = async () => {
-    try {
-      await api.post('/auth/register', { email, password, role });
+    try {   
+      await api.post('/auth/register', { email, password, role, department });
       setMessage('Registration successful. Please login.');
     } catch {
       setMessage('Registration failed.');
@@ -65,6 +66,21 @@ export default function Register({
         <option value="admin">Admin</option>
         <option value="hod">HOD</option>
         <option value="superadmin">Superadmin</option>
+      </select>
+    </div>
+    <div className="input-group">
+      <select
+        name="department"
+        value={department}
+        onChange={e => setdepartment(e.target.value)}
+        className="auth-select"
+      >
+        <option value="">Select department</option>
+        <option value="CSE">CSE</option>
+        <option value="CE">CE</option>
+        <option value="ME">ME</option>
+        <option value="CE">CE</option>
+        <option value="ECE">ECE</option>
       </select>
     </div>
 

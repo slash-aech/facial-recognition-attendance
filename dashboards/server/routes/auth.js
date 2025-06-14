@@ -14,14 +14,15 @@ const generateToken = (user) => {
 };
 
 router.post('/register', async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, department} = req.body;
+  console.log(req.body)
   if (!email || !password || !role) return res.status(400).json({ error: 'All fields required' });
 
   try {
     const hashed = await bcrypt.hash(password, 10);
     await pool.query(
-        'INSERT INTO users (email, password, role) VALUES ($1, $2, $3)',
-        [email, hashed, role]
+        'INSERT INTO users (email, password, role, department) VALUES ($1, $2, $3, $4)',
+        [email, hashed, role, department]
     );
     res.status(201).json({ success: true, message: 'User registered' });
 } catch (err) {
@@ -54,13 +55,12 @@ if (!user || !(await bcrypt.compare(password, user.password))) {
   return res.status(401).json({ error: 'Invalid credentials' });
 }
 
-const token = generateToken({ id: user.id, role: user.role }); // this is important
-
+const token = generateToken({ id: user.email, role: user.role }); // this is important
 res.cookie('token', token, {
   httpOnly: true,
   secure: false,
   sameSite: 'lax',
-  maxAge: 15 * 60 * 1000, // 15 minutes
+  maxAge: 60 * 60 * 1000, // 15 minutes
 });
 
 res.json({ role: user.role });
