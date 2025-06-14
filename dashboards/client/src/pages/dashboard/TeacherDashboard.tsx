@@ -5,112 +5,219 @@ import type { Classroom, AttendanceRecord } from '../../types';
 import '../../styles/SuperAdminDashboard.css'
 
 export default function SuperadminDashboard() {
+
+
+
+  const [timetableSheetUrl, setTSheetUrl] = useState('');
+  const [timetableUploadMessage, setTUploadMessage] = useState('');
+  
+  const extractSheetId = (url: string): string | null => {
+    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : null;
+  };
+  
+  const handleTimetableUploadSheet = async () => {
+    const sheetId = extractSheetId(timetableSheetUrl);
+    if (!sheetId) {
+      setTUploadMessage('Invalid Google Sheet URL');
+      return;
+    }
+  
+    try {
+      const response = await api.post('/timetable/upload', { sheetId });
+      setTUploadMessage(response.data?.message || 'Sheet uploaded successfully');
+    } catch (err) {
+      console.error(err);
+      setTUploadMessage('Failed to upload sheet (Maybe wrong format or incomplete field)');
+    }
+  };
+
+
+
+const [selectedClassroomId, setSelectedClassroomId] = useState<number | null>(null);
+const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+useEffect(() => {
+  if (selectedClassroomId !== null) {
+    api.get(`/attendance/classroom/${selectedClassroomId}`)
+      .then(res => setAttendance(res.data))
+      .catch(() => setAttendance([]));
+  }
+}, [selectedClassroomId]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [selectedClassroomId, setSelectedClassroomId] = useState<number | null>(null);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [message, setMessage] = useState('');
 
- useEffect(() => {
-    api.get('/auth/check')
- });
-
-
- useEffect(() => {
-  api.get('/classrooms')
-    .then(res => {
-      // console.log('DATA:', res.data);
-      if (Array.isArray(res.data)) {
-        setClassrooms(res.data);
-      } else {
-        setClassrooms([res.data]); // or res.data.classrooms if wrapped
-      }
-    })
-    .catch(() => setMessage('Failed to load classrooms'));
-  }, []);
-  
-  // useEffect(() => {
-  //   console.log("Updated classrooms:", classrooms);
-  // }, [classrooms]);
-
-
-  // Load classrooms on mount
-  // useEffect(() => {
-  //   api.get<Classroom[]>('/classrooms')
-  //   .then(res => {
-  //     setClassrooms(res.data);
-  //     console.log("Fetched classrooms:", res.data);
-  //     if (!Array.isArray(setClassrooms([res.data]))) {
-  //       setMessage("Expected an array but got something else");
-  //       return;
-  //     }
-  //   })
-  //   .catch((err) => {
-  //     console.error("Failed to load classrooms:", err);
-  //     setMessage('Failed to load classrooms');
-  //   });
-  // }, []);
-  // useEffect(() => {
-  //   console.log("Updated classrooms:", classrooms);
-  // }, [classrooms]);
-
-  // Load attendance when classroom is selected
-  useEffect(() => {
-    if (selectedClassroomId === null) return;
-
-    api.get<AttendanceRecord[]>(`/attendance/records?classroom_id=${selectedClassroomId}`)
+  const fetchClassrooms = () => {
+    setMessage('Loading classrooms...');
+    api.get('/classrooms/all')
       .then(res => {
-        setAttendance(res.data)
-        console.log(res.data);
-  })
-      .catch(() => setMessage('Failed to load attendance'));
-  }, [selectedClassroomId]);
+        if (Array.isArray(res.data)) {
+          setClassrooms(res.data);
+        } else {
+          setClassrooms([res.data]);
+        }
+        setMessage('');
+      })
+      .catch(() => setMessage('Failed to load classrooms'));
+  };
+
+  useEffect(() => {
+    fetchClassrooms();
+  }, []);
+
+  const startAttendance = (classroom: Classroom) => {
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const radiusInput = prompt('Enter attendance radius in meters (default: 100):', '100');
+        const radius = parseInt(radiusInput || '100', 10);
+
+        api.patch(`/classrooms/${classroom.id}/start`, { latitude, longitude, radius })
+          .then(() => {
+            setMessage(`Started attendance for ${classroom.name}`);
+            fetchClassrooms();
+          })
+          .catch(() => setMessage('Failed to start attendance'));
+      },
+      () => alert('Location permission is required to start attendance')
+    );
+  };
+
+  const stopAttendance = (classroom: Classroom) => {
+    api.patch(`/classrooms/${classroom.id}/stop`)
+      .then(() => {
+        setMessage(`Stopped attendance for ${classroom.name}`);
+        fetchClassrooms();
+      })
+      .catch(() => setMessage('Failed to stop attendance'));
+
+  };
+
 
   return (
-    <div className="superadmin-dashboard">
+   <div className="dark-admin-dashboard">
+  {/* Header with gradient border */}
   <header className="dashboard-header">
-    <h1 className="dashboard-title">Teacher Dashboard</h1>
+    <h1 className="gradient-title">
+      <span className="title-highlight">Admin</span> Dashboard
+    </h1>
     <LogoutButton />
   </header>
 
-  {message && <div className="alert-message">{message}</div>}
+  {/* Notification system */}
+  {message && (
+    <div className="notification-bubble">
+      <i className="fas fa-info-circle"></i> {message}
+    </div>
+  )}
 
-  <section className="classroom-section">
-    <h2 className="section-title">Classrooms</h2>
-    <div className="classroom-grid">
+  {/* Upload sections with glassmorphism effect */}
+  <section className="upload-section glass-card">
+    <h2 className="section-title">
+      <i className="fas fa-table"></i> Upload Timetable
+    </h2>
+    <div className="upload-controls">
+      <input
+        type="text"
+        placeholder="Paste Google Sheet URL"
+        value={timetableSheetUrl}
+        onChange={(e) => setTSheetUrl(e.target.value)}
+        className="glass-input"
+      />
+      <button 
+        onClick={handleTimetableUploadSheet} 
+        className="gradient-button"
+      >
+        <i className="fas fa-cloud-upload-alt"></i> Upload
+      </button>
+    </div>
+    {timetableUploadMessage && (
+      <div className="status-message">{timetableUploadMessage}</div>
+    )}
+  </section>
+
+
+
+
+  
+  <div className="classroom-list">
+        <h2>All Classrooms</h2>
+        <ul>
+          {classrooms.map((c) => (
+            <li key={c.id} className="classroom-card">
+              <p><strong>{c.name}</strong></p>
+              <p>Status: <span style={{ color: c.is_active ? 'green' : 'red' }}>
+                {c.is_active ? 'Active' : 'Inactive'}
+              </span></p>
+              <p>Radius: {c.radius}m</p>
+              {c.latitude && c.longitude && (
+                <p>Location: {c.latitude.toFixed(5)}, {c.longitude.toFixed(5)}</p>
+              )}
+              {c.is_active ? (
+                <button onClick={() => stopAttendance(c)} className="stop-btn">Stop Attendance</button>
+              ) : (
+                <button onClick={() => startAttendance(c)} className="start-btn">Start Attendance</button>
+              )}
+            </li>
+          ))}
+        </ul>
+  </div>
+
+  {/* Classroom grid */}
+  <section className="glass-card">
+    <h2 className="section-title">
+      <i className="fas fa-chalkboard"></i> Classrooms
+    </h2>
+    <div className="grid-layout">
       {classrooms?.map(c => (
-        <button
+        <div
           key={c.id}
-          className={`classroom-card ${selectedClassroomId === c.id ? 'active' : ''}`}
+          className={`grid-item ${selectedClassroomId === c.id ? 'active-item' : ''}`}
           onClick={() => setSelectedClassroomId(c.id)}
         >
-          {c.name}
-        </button>
+          <div className="item-content">
+            <i className="fas fa-door-open"></i>
+            {c.name}
+          </div>
+        </div>
       ))}
     </div>
   </section>
+      
 
+
+  {/* Attendance records */}
   {selectedClassroomId !== null && (
-    <section className="attendance-section">
-      <h2 className="section-title">Attendance Records</h2>
+    <section className="glass-card">
+      <h2 className="section-title">
+        <i className="fas fa-clipboard-check"></i> Attendance Records
+      </h2>
       
       {attendance.length === 0 ? (
-        <div className="empty-state">No attendance records yet</div>
+        <div className="empty-state">
+          <i className="fas fa-search-minus"></i> No records found
+        </div>
       ) : (
-        <div className="attendance-list">
+        <div className="data-table">
+          <div className="table-header">
+            <span>Student</span>
+            <span>Time</span>
+            <span>Location</span>
+          </div>
           {attendance.map(a => (
-            <div key={a.id} className="attendance-card">
-              <div className="attendance-header">
-                <span className="user-email">{a.email}</span>
-                <span className="attendance-time">
-                  {new Date(a.timestamp).toLocaleString()}
-                </span>
-              </div>
-              <div className="attendance-meta">
-                <span className="location">
-                  <i className="fas fa-map-marker-alt"></i> 
-                  {a.latitude}, {a.longitude}
-                </span>
-              </div>
+            <div key={a.id} className="table-row">
+              <span className="user-cell">
+                <i className="fas fa-user-graduate"></i> {a.email}
+              </span>
+              <span className="time-cell">
+                {new Date(a.timestamp).toLocaleString()}
+              </span>
+              <span className="location-cell">
+                <i className="fas fa-map-pin"></i> {a.latitude}, {a.longitude}
+              </span>
             </div>
           ))}
         </div>
