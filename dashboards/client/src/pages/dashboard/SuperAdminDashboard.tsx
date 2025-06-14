@@ -80,19 +80,25 @@ useEffect(() => {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [message, setMessage] = useState('');
 
-  const fetchClassrooms = () => {
-    setMessage('Loading classrooms...');
-    api.get('/classrooms/all')
-      .then(res => {
-        if (Array.isArray(res.data)) {
-          setClassrooms(res.data);
-        } else {
-          setClassrooms([res.data]);
-        }
-        setMessage('');
-      })
-      .catch(() => setMessage('Failed to load classrooms'));
-  };
+  const fetchClassrooms = async () => {
+  setMessage('Loading classrooms...');
+  try {
+    const res = await api.get('/classrooms/all');
+    const data = res.data;
+
+    if (Array.isArray(data)) {
+      setClassrooms(data);
+    } else {
+      setClassrooms([data]);
+    }
+
+    console.log(data);
+    setMessage('');
+  } catch (error) {
+    console.error('Error fetching classrooms:', error);
+    setMessage('Failed to load classrooms');
+  }
+};
 
   useEffect(() => {
     fetchClassrooms();
@@ -238,7 +244,7 @@ useEffect(() => {
   <div className="classroom-list">
         <h2>All Classrooms</h2>
         <ul>
-          {classrooms.map((c) => (
+          {classrooms.filter(c => c.id).map(c => (
             <li key={c.id} className="classroom-card">
               <p><strong>{c.name}</strong></p>
               <p>Status: <span style={{ color: c.is_active ? 'green' : 'red' }}>
@@ -264,7 +270,7 @@ useEffect(() => {
       <i className="fas fa-chalkboard"></i> Classrooms
     </h2>
     <div className="grid-layout">
-      {classrooms?.map(c => (
+      {classrooms.filter(c => c.id).map(c => (
         <div
           key={c.id}
           className={`grid-item ${selectedClassroomId === c.id ? 'active-item' : ''}`}
@@ -299,7 +305,7 @@ useEffect(() => {
             <span>Time</span>
             <span>Location</span>
           </div>
-          {attendance.map(a => (
+          {attendance.filter(a => a.id).map(a => (
             <div key={a.id} className="table-row">
               <span className="user-cell">
                 <i className="fas fa-user-graduate"></i> {a.email}
@@ -310,10 +316,8 @@ useEffect(() => {
               <span className="location-cell">
                 <i className="fas fa-map-pin"></i> {a.latitude}, {a.longitude}
               </span>
-            </div>
-          ))}
-        </div>
-      )}
+            </div>))}
+        </div>)}
     </section>
   )}
 </div>

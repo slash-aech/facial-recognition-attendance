@@ -39,7 +39,7 @@ router.post('/upload', async (req, res) => {
     // Insert new data
     for (const row of rows) {
   await pool.query(
-    `INSERT INTO timetable (
+    `INSERT INTO timetable2 (
       day,
       "08:30 AM to 09:15 AM",
       "09:15 AM to 10:00 AM",

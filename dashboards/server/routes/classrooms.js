@@ -34,7 +34,8 @@ router.get('/all', authenticateToken, async (req, res) => {
   }
 
   try {
-    const [rows] = await pool.query('SELECT * FROM classrooms');
+    const rows = await pool.query('SELECT * FROM classrooms');
+    console.log(rows)
     res.json(rows);
   } catch (err) {
     console.error(err);

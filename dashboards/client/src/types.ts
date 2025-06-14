@@ -1,9 +1,9 @@
 export interface Classroom {
-  is_active: boolean;
   id: number;
-  name: string;
+  is_active: boolean;
   latitude: number;
   longitude: number;
+  name: string;
   radius: number; // in meters
 }
 
