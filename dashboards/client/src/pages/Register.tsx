@@ -17,6 +17,7 @@ export default function Register({
     try {   
       await api.post('/auth/register', { email, password, role, department });
       setMessage('Registration successful. Please login.');
+      navigate('/login');
     } catch {
       setMessage('Registration failed.');
     }
