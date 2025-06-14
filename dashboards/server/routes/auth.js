@@ -58,7 +58,7 @@ if (!user || !(await bcrypt.compare(password, user.password))) {
 const token = generateToken({ id: user.email, role: user.role }); // this is important
 res.cookie('token', token, {
   httpOnly: true,
-  secure: false,
+  secure: true,
   sameSite: 'None',
   maxAge: 60 * 60 * 1000, // 15 minutes
 });
