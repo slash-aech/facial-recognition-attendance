@@ -6,7 +6,7 @@ const auth = new google.auth.GoogleAuth({
   scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
 });
 
-const sheetId = '1zQRBpP2PqUTWmY8KnD4iC0bHNG4RYtiIeEeHWv0s4zY'; // Replace with your Google Sheet ID
+const sheetId = '1zQRBpP2PqUTWmY8KnD4iC0bHNG4RYtiIeEeHWv0s4zY';
 
 async function getSheetData(range = 'Sheet1!A2:D') {
   const client = await auth.getClient();

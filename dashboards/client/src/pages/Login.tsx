@@ -1,9 +1,9 @@
-import  { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
-import api from '../api';
+import { faceLogin } from '../api'; // ✅ Import backend API call
 import '../styles/Login.css';
 
-export default function login({
+export default function Login({
   onLogin,
   onSwitchToRegister,
 }: {
@@ -21,7 +21,6 @@ export default function login({
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
 
-  // Load face models and start video
   useEffect(() => {
     const loadModels = async () => {
       try {
@@ -58,7 +57,6 @@ export default function login({
     return () => clearTimeout(fallbackTimer);
   }, []);
 
-  // Face login detection loop
   useEffect(() => {
     const detectAndLogin = async () => {
       if (!videoRef.current || !canvasRef.current || showBasicLogin) return;
@@ -81,9 +79,16 @@ export default function login({
         setLoggingIn(true);
         try {
           const faceBase64 = getScreenshot(video);
-          const res = await api.post('/auth/facelogin', { image: faceBase64 },  { withCredentials: true });
-          onLogin(res.data.role);
+          const response = await faceLogin(faceBase64); // ✅ Use API call here
+
+          // Save to localStorage
+          localStorage.setItem('userToken', response.token);
+          localStorage.setItem('userInfo', JSON.stringify(response.user));
+          setStatus('Login successful!');
+
+          onLogin(response.user.role); // ✅ Trigger login callback
         } catch (err: any) {
+          console.error(err);
           setStatus(err.response?.data?.message || 'Face login failed');
           setShowBasicLogin(true);
         } finally {
@@ -108,15 +113,26 @@ export default function login({
     ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg').split(',')[1];
   };
-  
 
   const handleBasicLogin = async () => {
     try {
-      console.log("trying to log in")
-      const res = await api.post('/auth/login', { email, password });
-      onLogin(res.data.role);
-    } catch {
-      setMessage('Login failed.');
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || 'Login failed.');
+
+      localStorage.setItem('userToken', data.token);
+      localStorage.setItem('userInfo', JSON.stringify(data.user));
+      onLogin(data.user.role);
+    } catch (err: any) {
+      setMessage(err.message || 'Login failed.');
     }
   };
 

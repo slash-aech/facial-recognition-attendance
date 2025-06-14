@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import {  Link, useNavigate } from "react-router-dom";
+import { data, Link, useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
 import * as faceapi from "face-api.js";
 import {
@@ -51,8 +51,8 @@ const RegistrationForm: React.FC = () => {
   }, [errorMessage]);
 
   useEffect(() => {
-    let intervalId: ReturnType<typeof setInterval>;
-    
+    let intervalId: NodeJS.Timeout;
+
     if (isModalOpen && webcamRef.current && canvasRef.current) {
       const video = webcamRef.current.video as HTMLVideoElement;
       const canvas = canvasRef.current;
@@ -166,10 +166,10 @@ const RegistrationForm: React.FC = () => {
       setErrorMessage("Unique ID is required");
       return;
     }
-    // if (!email.trim()) {
-    //   setErrorMessage("Email is required");
-    //   return;
-    // }
+    if (!email.trim()) {
+      setErrorMessage("Email is required");
+      return;
+    }
     if (!password.trim()) {
       setErrorMessage("Password is required");
       return;
