@@ -12,6 +12,7 @@ export default function Register({
   const [role, setRole] = useState('student');
   const [department, setdepartment] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     try {   
