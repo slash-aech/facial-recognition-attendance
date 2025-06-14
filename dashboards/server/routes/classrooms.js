@@ -29,9 +29,9 @@ router.get('/', authenticateToken, async (req, res) => {
 
 router.get('/all', authenticateToken, async (req, res) => {
   const user = req.user;
-  if (user.role !== 'superadmin') {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
+  //if (user.role !== 'superadmin') {
+    //return res.status(403).json({ error: 'Unauthorized' });
+  //}
 
   try {
     const [rows] = await pool.query('SELECT * FROM classrooms');
