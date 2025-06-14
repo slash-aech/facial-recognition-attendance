@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../api';
 import '../styles//Register.css'
+import { useNavigate } from 'react-router-dom';
 
 export default function Register({
   onSwitchToLogin,
@@ -12,11 +13,13 @@ export default function Register({
   const [role, setRole] = useState('student');
   const [department, setdepartment] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     try {   
       await api.post('/auth/register', { email, password, role, department });
       setMessage('Registration successful. Please login.');
+      navigate('/login');
     } catch {
       setMessage('Registration failed.');
     }

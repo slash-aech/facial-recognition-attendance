@@ -58,9 +58,9 @@ if (!user || !(await bcrypt.compare(password, user.password))) {
 const token = generateToken({ id: user.email, role: user.role }); // this is important
 res.cookie('token', token, {
   httpOnly: true,
-  secure: false,
-  sameSite: 'lax',
-  maxAge: 60 * 60 * 1000, // 15 minutes
+  secure: true,
+  sameSite: 'None',
+  maxAge: 60 * 60 * 1000, // 1 hour
 });
 
 res.json({ role: user.role });
@@ -73,7 +73,7 @@ res.json({ role: user.role });
 
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
-  res.sendStatus(201);
+  res.redirect('/login');
 });
 
 

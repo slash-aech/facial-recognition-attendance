@@ -9,7 +9,7 @@ export default function LogoutButton() {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
-      window.location.reload(); 
+      // window.location.reload(); 
       // Redirect to login or home after logout
       navigate('/login');
     } catch (err) {
