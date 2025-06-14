@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../api';
 import '../styles//Register.css'
+import { useNavigate } from 'react-router-dom';
 
 export default function Register({
   onSwitchToLogin,
