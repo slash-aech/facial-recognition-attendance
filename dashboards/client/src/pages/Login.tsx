@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import  { useEffect, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
 import api from '../api';
 import '../styles/Login.css';

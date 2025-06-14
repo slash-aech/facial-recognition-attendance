@@ -53,13 +53,8 @@ const HomeWrapper: React.FC = () => {
   );
 };
 
-const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole }) => {
+const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole  }) => {
   const navigate = useNavigate();
-
-  const handleLogin = (newRole: string) => {
-    setRole(newRole);
-    navigate(`/${newRole}`);
-  };
 
   return (
     <Routes>
@@ -75,7 +70,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole }) => {
             <Navigate to={`/${role}`} replace />
           ) : (
             <Login
-              onLogin={handleLogin}
+              onLogin={setRole}
               onSwitchToRegister={() => navigate('/register')}
             />
           )
@@ -88,7 +83,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole }) => {
           role ? (
             <Navigate to={`/${role}`} replace />
           ) : (
-            <Register onSwitchToLogin={() => navigate('/login')} />
+            <Register />
           )
         }
       />
