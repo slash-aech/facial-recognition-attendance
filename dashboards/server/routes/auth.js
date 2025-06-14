@@ -60,7 +60,7 @@ res.cookie('token', token, {
   httpOnly: true,
   secure: true,
   sameSite: 'None',
-  maxAge: 60 * 60 * 1000, // 15 minutes
+  maxAge: 60 * 60 * 1000, // 1 hour
 });
 
 res.json({ role: user.role });
@@ -73,6 +73,7 @@ res.json({ role: user.role });
 
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
+  res.redirect('/login');
   res.sendStatus(201);
 });
 
