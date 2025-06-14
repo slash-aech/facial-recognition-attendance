@@ -70,11 +70,12 @@ res.json({ role: user.role });
     res.status(500).json({ error: 'Login failed' });
   }
 });
-
+router.post('/login', async (req, res) => {
 res.clearCookie('token', {
   httpOnly: true,
   secure: true,
-  sameSite: 'None',
+  sameSite: 'None'
+})
 });
 res.status(200).json({ message: 'Logged out successfully' });
 
