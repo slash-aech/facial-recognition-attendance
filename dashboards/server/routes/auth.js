@@ -74,7 +74,6 @@ res.json({ role: user.role });
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.redirect('/login');
-  res.sendStatus(201);
 });
 
 
