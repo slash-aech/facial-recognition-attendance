@@ -32,7 +32,8 @@ const studentUploadRoutes = require('./routes/student');
 const facultyUploadRoutes = require('./routes/faculty');
 const faceRouter = require('./routes/faceRouter')
 const protectedRoute = require('./routes/protectedRoutes');
-const userRouters = require('./routes/userRouters')
+const userRouters = require('./routes/userRouters');
+const superAdminRoutes = require('./routes/superAdminRoutes');
 
 app.use('/api/auth', authRoutes);       // login, register, /check, logout
 app.use('/api/classrooms', classroomRoutes);  // GET /api/classrooms  
@@ -43,7 +44,7 @@ app.use('/api/faculty', facultyUploadRoutes);
 app.use('/api', userRouters);
 app.use('/api/face', faceRouter);
 app.use('/api/api', protectedRoute);
-
+app.use('/api/superAdmin', superAdminRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);

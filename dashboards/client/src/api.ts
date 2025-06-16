@@ -75,4 +75,40 @@ const api = axios.create({
   withCredentials: true,  // important to send cookies
 });
 
+// Fetch all institutes
+export async function fetchAllInstitutes() {
+  const response = await api.get("/superAdmin/institutes");
+  return response.data;
+}
+
+// Fetch all departments
+export async function fetchAllDepartments() {
+  const response = await api.get("/superAdmin/departments");
+  return response.data;
+}
+
+// Fetch departments by institute ID
+export async function fetchDepartmentsByInstitute(instituteId: string) {
+  if (!instituteId) throw new Error("Institute ID required");
+  const response = await api.get(`/superAdmin/institutes/${instituteId}/departments`);
+  return response.data;
+}
+
+// Fetch all academic years
+export async function fetchAcademicYears() {
+  const response = await api.get("/superAdmin/academic-years");
+  return response.data;
+}
+
+// Fetch all semesters, optionally filtered
+export async function fetchSemesters(filters?: { academicYearId?: string; instituteId?: string }) {
+  const params = new URLSearchParams();
+  if (filters?.academicYearId) params.append("academicYearId", filters.academicYearId);
+  if (filters?.instituteId) params.append("instituteId", filters.instituteId);
+
+  const query = params.toString() ? `?${params.toString()}` : "";
+  const response = await api.get(`/superAdmin/semesters${query}`);
+  return response.data;
+}
+
 export default api;
