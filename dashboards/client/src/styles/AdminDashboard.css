@@ -235,3 +235,44 @@ select option {
   background-color: #1f2937;
   color: white;
 }
+
+.toast-message {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  min-width: 250px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: white;
+  z-index: 9999;
+  opacity: 0.95;
+  animation: fadeInOut 4s forwards;
+}
+
+.toast-message.error {
+  background-color: #e63946;
+}
+
+.toast-message.success {
+  background-color: #2ecc71;
+}
+
+@keyframes fadeInOut {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  10% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  90% {
+    transform: translateY(0px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
