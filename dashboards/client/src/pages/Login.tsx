@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as faceapi from 'face-api.js';
 import { faceLogin } from '../api'; // ✅ Import backend API call
 import '../styles/Login.css';
+import api from '../api'
 
 export default function Login({
   onLogin,
@@ -116,23 +117,10 @@ export default function Login({
 
   const handleBasicLogin = async () => {
     try {
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.message || 'Login failed.');
-
-      localStorage.setItem('userToken', data.token);
-      localStorage.setItem('userInfo', JSON.stringify(data.user));
-      onLogin(data.user.role);
-    } catch (err: any) {
-      setMessage(err.message || 'Login failed.');
+      const res = await api.post('/auth/login', { email, password });
+      onLogin(res.data.role);
+    } catch {
+      setMessage('Login failed.');
     }
   };
 

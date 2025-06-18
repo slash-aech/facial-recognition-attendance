@@ -1,15 +1,10 @@
-require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
 const app = express();
-// app.use(bodyParser.json({ limit: '10mb' }));
-app.use(cors())
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
-// app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -19,10 +14,6 @@ app.use(cors({
   credentials: true
 }));
 
-// app.options('*', cors({
-//   origin: 'http://localhost:5173',
-//   credentials: true
-// }));
 
 const authRoutes = require('./routes/auth');
 const classroomRoutes = require('./routes/classrooms');

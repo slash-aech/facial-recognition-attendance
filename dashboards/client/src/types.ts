@@ -14,3 +14,30 @@ export interface AttendanceRecord {
   latitude: number;
   longitude: number;
 }
+
+export interface Institute {
+  id: string;
+  name: string;
+  address: string;
+  email: string;
+  phone: string;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  institute_id: string;
+}
+
+export interface AcademicYear {
+  id: string;
+  start_year: number;
+  end_year: number;
+}
+
+export interface Semester {
+  id: string;
+  semester_type: string;
+  academic_year_id: string;
+  institute_id: string;
+}

@@ -1,7 +1,8 @@
-import axios from 'axios';
-import https from 'https';
-import dotenv from 'dotenv';
-import jwt from 'jsonwebtoken'
+const axios = require('axios');
+const https = require('https');
+const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+const { faceLogin } = require('./userController');
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ const CONFIDENCE_THRESHOLD = 0.8;
 
 const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
-export async function isFaceRegistered(base64Image) {
+async function isFaceRegistered(base64Image) {
   try {
     const body = { file: base64Image };
     const headers = {
@@ -40,7 +41,7 @@ export async function isFaceRegistered(base64Image) {
   }
 }
 
-export async function checkFaceRegistration(req, res) {
+ async function checkFaceRegistration(req, res) {
   const { base64Image } = req.body;
 
   if (!base64Image) {
@@ -52,7 +53,7 @@ export async function checkFaceRegistration(req, res) {
   res.json({ registered });
 }
 
-export async function registerFace(req, res) {
+async function registerFace(req, res) {
   console.log('Full req.body:', req.body);
 
   const { subject, base64Image, email, password, user_role } = req.body;
@@ -105,3 +106,4 @@ export async function registerFace(req, res) {
     res.status(500).json({ error: 'Face registration failed' });
   }
 }
+module.exports = {isFaceRegistered, checkFaceRegistration, faceLogin, registerFace}

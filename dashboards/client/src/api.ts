@@ -77,26 +77,26 @@ const api = axios.create({
 
 // Fetch all institutes
 export async function fetchAllInstitutes() {
-  const response = await api.get("/superAdmin/institutes");
+  const response = await api.get(`${BASE_URL}/superAdmin/institutes`);
   return response.data;
 }
 
 // Fetch all departments
 export async function fetchAllDepartments() {
-  const response = await api.get("/superAdmin/departments");
+  const response = await api.get(`${BASE_URL}/superAdmin/departments`);
   return response.data;
 }
 
 // Fetch departments by institute ID
 export async function fetchDepartmentsByInstitute(instituteId: string) {
   if (!instituteId) throw new Error("Institute ID required");
-  const response = await api.get(`/superAdmin/institutes/${instituteId}/departments`);
+  const response = await api.get(`${BASE_URL}/superAdmin/${instituteId}/departments`);
   return response.data;
 }
 
 // Fetch all academic years
 export async function fetchAcademicYears() {
-  const response = await api.get("/superAdmin/academic-years");
+  const response = await api.get(`${BASE_URL}/superAdmin/academic-years`);
   return response.data;
 }
 
@@ -107,8 +107,35 @@ export async function fetchSemesters(filters?: { academicYearId?: string; instit
   if (filters?.instituteId) params.append("instituteId", filters.instituteId);
 
   const query = params.toString() ? `?${params.toString()}` : "";
-  const response = await api.get(`/superAdmin/semesters${query}`);
+  const response = await api.get(`${BASE_URL}/superAdmin/semesters${query}`);
   return response.data;
 }
+
+export const fetchAcademicCalendarBySemester = async (semesterId?:string) => {
+  const res = await axios.get(`${BASE_URL}/superAdmin/${semesterId}`);
+  console.log(res.data);
+  return res.data;
+};
+
+// import axios from 'axios';
+
+interface Meta {
+  instituteId: string;
+  departmentId: string;
+  semesterId: string;
+  academicCalendarId: string;
+}
+
+export const uploadTimetable = async (parsedData: any[], meta: Meta) => {
+  try {
+    const res = await axios.post(`${BASE_URL}/timetable/upload-timetable`, {
+      parsedData,
+      meta
+    });
+    return res.data;
+  } catch (error: any) {
+    return { success: false, error: error.response?.data?.error || error.message };
+  }
+};
 
 export default api;

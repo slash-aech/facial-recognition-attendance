@@ -235,3 +235,5 @@ select option {
   background-color: #1f2937;
   color: white;
 }
+.valid { background-color: #e6ffe6; }
+.error { background-color: #ffe6e6; }

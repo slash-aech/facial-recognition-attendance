@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../../api';
 import type { Classroom } from '../../types';
 import LogoutButton from '../../components/LogoutButton';
-import '../../styles/StudentDashboard.css';
+import '../../styles/SuperAdminDashboard.module.css'
 
 export default function StudentDashboard() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
