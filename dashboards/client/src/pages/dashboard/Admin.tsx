@@ -6,7 +6,8 @@ import {
   fetchAllInstitutes,
   fetchDepartmentsByInstitute,
   fetchAcademicYears,
-  fetchSemesters
+  fetchSemesters,
+  fetchAcademicCalendarBySemester,
 } from '../../api';
 
 // Types
@@ -15,7 +16,6 @@ interface Institute {
   name: string;
   address: string;
   email: string;
-  phone: string;
 }
 
 interface Department {
@@ -32,9 +32,16 @@ interface AcademicYear {
 
 interface Semester {
   id: string;
-  semester_type: string;
   academic_year_id: string;
   institute_id: string;
+  semester_type: string; // e.g., "Even", "Odd"
+}
+
+interface AcademicCalendar {
+  id: string;
+  semester_id: string;
+  start_date: string;
+  end_date: string;
 }
 
 export default function Admin() {
@@ -42,13 +49,15 @@ export default function Admin() {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [years, setYears] = useState<AcademicYear[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [academicCalendar, setAcademicCalendar] = useState<AcademicCalendar[]>([]);
 
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
+  const [selectedCalendarId, setSelectedCalendarId] = useState('');
 
-  // Fetch all data on mount
+  // Fetch initial data: Institutes, Academic Years, Semesters
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -68,7 +77,7 @@ export default function Admin() {
     fetchInitialData();
   }, []);
 
-  // Fetch departments when institute changes
+  // Fetch departments based on selected institute
   useEffect(() => {
     const fetchDeps = async () => {
       if (!selectedInstitute) {
@@ -87,6 +96,32 @@ export default function Admin() {
     fetchDeps();
     setSelectedDepartment('');
   }, [selectedInstitute]);
+
+  // Fetch academic calendar when semester is selected
+  useEffect(() => {
+    const fetchCalendar = async () => {
+      if (!selectedSemester) {
+        setAcademicCalendar([]);
+        return;
+      }
+
+      try {
+        const data = await fetchAcademicCalendarBySemester(selectedSemester);
+        setAcademicCalendar([data]); // Always wrap in array
+      } catch (error) {
+        console.error('Failed to load academic calendar:', error);
+      }
+    };
+
+    fetchCalendar();
+    setSelectedCalendarId('');
+  }, [selectedSemester]);
+
+  // Filter semesters for selected institute and year
+  const filteredSemesters = semesters.filter(
+    (sem) =>
+      sem.institute_id === selectedInstitute && sem.academic_year_id === selectedYear
+  );
 
   return (
     <div className="admin-dashboard">
@@ -109,10 +144,15 @@ export default function Admin() {
 
         <div className="upload-form">
           <div className="form-row">
-            {/* Select Institute */}
+            {/* Institute Dropdown */}
             <select
               value={selectedInstitute}
-              onChange={(e) => setSelectedInstitute(e.target.value)}
+              onChange={(e) => {
+                setSelectedInstitute(e.target.value);
+                setSelectedYear('');
+                setSelectedSemester('');
+                setAcademicCalendar([]);
+              }}
             >
               <option value="">Select Institute</option>
               {institutes.map((inst) => (
@@ -122,7 +162,7 @@ export default function Admin() {
               ))}
             </select>
 
-            {/* Select Department */}
+            {/* Department Dropdown */}
             <select
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
@@ -136,10 +176,15 @@ export default function Admin() {
               ))}
             </select>
 
-            {/* Select Academic Year */}
+            {/* Academic Year Dropdown */}
             <select
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
+              onChange={(e) => {
+                setSelectedYear(e.target.value);
+                setSelectedSemester('');
+                setAcademicCalendar([]);
+              }}
+              disabled={!selectedInstitute}
             >
               <option value="">Select Academic Year</option>
               {years.map((year) => (
@@ -149,31 +194,43 @@ export default function Admin() {
               ))}
             </select>
 
-            {/* Select Semester */}
+            {/* Semester Dropdown */}
             <select
               value={selectedSemester}
               onChange={(e) => setSelectedSemester(e.target.value)}
+              disabled={!selectedInstitute || !selectedYear}
             >
               <option value="">Select Semester</option>
-              {semesters
-                .filter(
-                  (sem) =>
-                    sem.academic_year_id === selectedYear &&
-                    sem.institute_id === selectedInstitute
-                )
-                .map((sem) => (
-                  <option key={sem.id} value={sem.id}>
-                    {sem.semester_type}
-                  </option>
-                ))}
+              {filteredSemesters.map((sem) => (
+                <option key={sem.id} value={sem.id}>
+                  {sem.semester_type}
+                </option>
+              ))}
+            </select>
+
+            {/* Academic Calendar Dropdown */}
+            <select
+              value={selectedCalendarId}
+              onChange={(e) => setSelectedCalendarId(e.target.value)}
+              disabled={!academicCalendar.length}
+            >
+              <option value="">Select Academic Calendar</option>
+              {academicCalendar.map((cal) => (
+                <option key={cal.id} value={cal.id}>
+                  {new Date(cal.start_date).toLocaleDateString()} -{' '}
+                  {new Date(cal.end_date).toLocaleDateString()}
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Timetable Upload Component */}
           <TimeTableUpload
             institute={selectedInstitute}
             department={selectedDepartment}
             year={selectedYear}
             semester={selectedSemester}
+            academicCalendarId={selectedCalendarId}
           />
         </div>
       </div>
