@@ -1,24 +1,23 @@
-import React, { useState } from 'react';
-import styles from '../styles/SuperAdminDashboard.module.css';
+import { useState } from 'react';
 import api from '../api';
+import styles from '../styles/SuperAdminDashboard.module.css';
 
-const StudentManagement = () => {
+const FacultyTimetableUpload = () => {
   const [uploadMode, setUploadMode] = useState<'xml' | 'google'>('xml');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
-  const [studentUploadMessage, setSUploadMessage] = useState('');
-
+  const [uploadMessage, setUploadMessage] = useState('');
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [semType, setSemType] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [year, setYear] = useState('');
 
   const oddSemesters = ['1st', '3rd', '5th', '7th'];
   const evenSemesters = ['2nd', '4th', '6th', '8th'];
-  const displayedSemesters = semType === 'odd' ? oddSemesters : semType === 'even' ? evenSemesters : [];
+  const displayedSemesters =
+    semType === 'odd' ? oddSemesters : semType === 'even' ? evenSemesters : [];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -31,10 +30,15 @@ const StudentManagement = () => {
       console.log('Uploading XML:', selectedFile);
     } else if (uploadMode === 'google') {
       const sheetId = extractSheetId(googleSheetUrl);
-      if (!sheetId) return setSUploadMessage('Invalid Google Sheet URL');
-      api.post('/student/data', { sheetId })
-        .then(res => setSUploadMessage(res.data?.message || 'Sheet uploaded successfully'))
-        .catch(() => setSUploadMessage('Failed to upload sheet (Maybe wrong format or incomplete field)'));
+      if (!sheetId) return setUploadMessage('Invalid Google Sheet URL');
+      api
+        .post('/faculty/upload', { sheetId })
+        .then((res) =>
+          setUploadMessage(res.data?.message || 'Sheet uploaded successfully')
+        )
+        .catch(() =>
+          setUploadMessage('Failed to upload sheet (Maybe wrong format or incomplete field)')
+        );
     }
   };
 
@@ -46,69 +50,71 @@ const StudentManagement = () => {
   return (
     <div className={styles.sectionWrapper}>
       <h1>Student Timetable Management</h1>
-
       <div className={styles.headerRow}>
-        <select value={selectedInstitute} onChange={(e) => setSelectedInstitute(e.target.value)}>
+        <select
+          value={selectedInstitute}
+          onChange={(e) => setSelectedInstitute(e.target.value)}
+        >
           <option value="">Institute</option>
           <option value="UVPCOE">UVPCOE</option>
         </select>
 
-        <select value={selectedDepartment} onChange={(e) => setSelectedDepartment(e.target.value)}>
+        <select
+          value={selectedDepartment}
+          onChange={(e) => setSelectedDepartment(e.target.value)}
+        >
           <option value="">Select Department</option>
           <option value="CSE">CSE</option>
           <option value="ECE">ECE</option>
         </select>
 
-        <select value={semType} onChange={(e) => {
-          setSemType(e.target.value);
-          setSelectedSemester('');
-        }}>
+        <select
+          value={semType}
+          onChange={(e) => {
+            setSemType(e.target.value);
+            setSelectedSemester('');
+          }}
+        >
           <option value="">Select Type</option>
           <option value="odd">Odd Semester</option>
           <option value="even">Even Semester</option>
         </select>
 
-        <select value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)} disabled={!semType}>
+        <select
+          value={selectedSemester}
+          onChange={(e) => setSelectedSemester(e.target.value)}
+          disabled={!semType}
+        >
           <option value="">Select Semester</option>
           {displayedSemesters.map((sem) => (
-            <option key={sem} value={sem}>{sem}</option>
+            <option key={sem} value={sem}>
+              {sem}
+            </option>
           ))}
         </select>
       </div>
 
       <div className={styles.dateRangeWrapper}>
-        <select value={year} onChange={(e) => setYear(e.target.value)}>
-          <option value="">Select Academic Year</option>
-          {[...Array(10)].map((_, i) => {
-          const start = 2024 + i;
-          const end = (start + 1).toString().slice(-2); // gets last 2 digits
-          const label = `${start}-${end}`;
-          return <option key={label} value={label}>{label}</option>;
-        })}
-</select>
-        <h3><u>Set Academic Calender</u></h3>
-        <label>
-          Start Date:
-          <input
-            type="date"
-            className={styles.date}
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </label>
-        <br />
-        <label>
-          End Date:
-          <input
-            type="date"
-            className={styles.date}
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            min={startDate}
-          />
-        </label>
+        <h3>
+          <u>Select Academic Year</u>
+        </h3>
+        <select
+          value={endDate}
+          onChange={(e) => setStartDate(e.target.value)}>
+          <option value="">Select start date</option>
+          <option value="June 24">June 24</option>
+          <option value="June 25">June 25</option>
+        </select>
+        <select
+          value={startDate}
+          onChange={(e) => setEndDate(e.target.value)}>
+          <option value="">Select end date</option>
+          <option value="August 24">August 24</option>
+          <option value="August 25">August 25</option>
+        </select>
       </div>
 
+      <h2 className={styles.sectionTitle}>Student Timetable Upload</h2>
       <div className={styles.uploadModeSwitch}>
         <button
           className={uploadMode === 'xml' ? styles.activeTab : ''}
@@ -153,7 +159,7 @@ const StudentManagement = () => {
             <button onClick={handleUpload} className={styles.uploadBtn}>
               Submit URL
             </button>
-            {studentUploadMessage && <p>{studentUploadMessage}</p>}
+            {uploadMessage && <p>{uploadMessage}</p>}
           </div>
         )}
       </div>
@@ -161,4 +167,4 @@ const StudentManagement = () => {
   );
 };
 
-export default StudentManagement;
+export default FacultyTimetableUpload;

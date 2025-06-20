@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import TimeTableUpload from '../../components/TimeTableUpload';
 import '../../styles/AdminDashboard.css';
 

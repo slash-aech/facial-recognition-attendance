@@ -6,7 +6,7 @@ const FacultyTimetableUpload = () => {
   const [uploadMode, setUploadMode] = useState<'xml' | 'google'>('xml');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
-  const [facultyUploadMessage, setFUploadMessage] = useState('');
+  const [uploadMessage, setUploadMessage] = useState('');
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [semType, setSemType] = useState('');
@@ -30,14 +30,14 @@ const FacultyTimetableUpload = () => {
       console.log('Uploading XML:', selectedFile);
     } else if (uploadMode === 'google') {
       const sheetId = extractSheetId(googleSheetUrl);
-      if (!sheetId) return setFUploadMessage('Invalid Google Sheet URL');
+      if (!sheetId) return setUploadMessage('Invalid Google Sheet URL');
       api
         .post('/faculty/upload', { sheetId })
         .then((res) =>
-          setFUploadMessage(res.data?.message || 'Sheet uploaded successfully')
+          setUploadMessage(res.data?.message || 'Sheet uploaded successfully')
         )
         .catch(() =>
-          setFUploadMessage('Failed to upload sheet (Maybe wrong format or incomplete field)')
+          setUploadMessage('Failed to upload sheet (Maybe wrong format or incomplete field)')
         );
     }
   };
@@ -99,14 +99,14 @@ const FacultyTimetableUpload = () => {
           <u>Select Academic Year</u>
         </h3>
         <select
-          value={selectedDepartment}
+          value={endDate}
           onChange={(e) => setStartDate(e.target.value)}>
           <option value="">Select start date</option>
           <option value="June 24">June 24</option>
           <option value="June 25">June 25</option>
         </select>
         <select
-          value={selectedDepartment}
+          value={startDate}
           onChange={(e) => setEndDate(e.target.value)}>
           <option value="">Select end date</option>
           <option value="August 24">August 24</option>
@@ -159,7 +159,7 @@ const FacultyTimetableUpload = () => {
             <button onClick={handleUpload} className={styles.uploadBtn}>
               Submit URL
             </button>
-            {facultyUploadMessage && <p>{facultyUploadMessage}</p>}
+            {uploadMessage && <p>{uploadMessage}</p>}
           </div>
         )}
       </div>
