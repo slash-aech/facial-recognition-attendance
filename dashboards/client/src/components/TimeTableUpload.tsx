@@ -28,10 +28,10 @@ const TimeTableUpload: React.FC<Props> = ({
   const showMessage = (msg: string, type: MessageType = 'error') => {
     setMessage(msg);
     setMessageType(type);
-    setTimeout(() => {
-      setMessage('');
-      setMessageType('');
-    }, 4000);
+    // setTimeout(() => {
+    //   setMessage('');
+    //   setMessageType('');
+    // }, 4000);
   };
 
   const parseXML = async (file: File) => {

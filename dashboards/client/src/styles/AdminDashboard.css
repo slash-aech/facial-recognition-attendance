@@ -211,6 +211,7 @@ tr:nth-child(even) {
 select {
   padding: 0.75rem 3rem;
   border-radius: 6px;
+  margin: 0.5rem 0.1rem;
   border: none;
   background: rgba(30, 41, 59, 1);
   color: white;
