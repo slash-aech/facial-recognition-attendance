@@ -41,3 +41,17 @@ export interface Semester {
   academic_year_id: string;
   institute_id: string;
 }
+
+export interface RegisterFacePayload {
+  subject: string;
+  base64Image: string;
+  email: string;
+  password: string;
+  user_role: string;
+}
+export interface Meta {
+  instituteId: string;
+  departmentId: string;
+  semesterId: string;
+  academicCalendarId: string;
+}

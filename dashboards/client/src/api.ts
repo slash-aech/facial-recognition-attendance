@@ -1,19 +1,18 @@
 import axios from "axios";
+import type {RegisterFacePayload, Meta} from './types'
 
 // const BASE_URL = "https://facial-recognition-attendance-backend.onrender.com/api";
 const BASE_URL = "http://localhost:10000/api"
 // Define types
-interface RegisterFacePayload {
-  subject: string;
-  base64Image: string;
-  email: string;
-  password: string;
-  user_role: string;
-}
+const api = axios.create({
+  baseURL: BASE_URL, // your backend URL
+  withCredentials: true,  // important to send cookies
+});
+
 
 export async function fetchUserById(uniqueId: string) {
   if (!uniqueId) throw new Error("Unique ID required");
-  const response = await axios.get(`${BASE_URL}/user/${uniqueId}`);
+  const response = await api.get(`${BASE_URL}/user/${uniqueId}`);
   return response.data;
 }
 
@@ -22,7 +21,7 @@ export async function changePassword(user_info_id: string, newPassword: string) 
     throw new Error("user_info_id and newPassword are required");
   }
 
-  const response = await axios.post(`${BASE_URL}/user/changePassword`, {
+  const response = await api.post(`${BASE_URL}/user/changePassword`, {
     user_info_id,
     newPassword,
   });
@@ -33,7 +32,7 @@ export async function changePassword(user_info_id: string, newPassword: string) 
 export async function checkFaceRegistered(base64Image: string) {
   if (!base64Image) throw new Error("Base64 image required");
 
-  const response = await axios.post(`${BASE_URL}/face/check`, {
+  const response = await api.post(`${BASE_URL}/face/check`, {
     base64Image,
   });
 
@@ -45,7 +44,7 @@ export async function registerFace({ subject, base64Image, email, password }: Re
     throw new Error("subject, base64Image, email and password are required");
   }
 
-  const response = await axios.post(`${BASE_URL}/face/register`, {
+  const response = await api.post(`${BASE_URL}/face/register`, {
     subject,
     base64Image,
     email,
@@ -57,7 +56,7 @@ export async function registerFace({ subject, base64Image, email, password }: Re
 
 export async function faceLogin(base64Image: string) {
   try {
-    const response = await axios.post(
+    const response = await api.post(
       `${BASE_URL}/user/face-login`,
       { image: base64Image },
       { headers: { "Content-Type": "application/json" } }
@@ -70,10 +69,6 @@ export async function faceLogin(base64Image: string) {
   }
 }
 
-const api = axios.create({
-  baseURL: BASE_URL, // your backend URL
-  withCredentials: true,  // important to send cookies
-});
 
 // Fetch all institutes
 export async function fetchAllInstitutes() {
@@ -112,23 +107,14 @@ export async function fetchSemesters(filters?: { academicYearId?: string; instit
 }
 
 export const fetchAcademicCalendarBySemester = async (semesterId?:string) => {
-  const res = await axios.get(`${BASE_URL}/superAdmin/${semesterId}`);
+  const res = await api.get(`${BASE_URL}/superAdmin/${semesterId}`);
   console.log(res.data);
   return res.data;
 };
 
-// import axios from 'axios';
-
-interface Meta {
-  instituteId: string;
-  departmentId: string;
-  semesterId: string;
-  academicCalendarId: string;
-}
-
 export const uploadTimetable = async (parsedData: any[], meta: Meta) => {
   try {
-    const res = await axios.post(`${BASE_URL}/timetable/upload-timetable`, {
+    const res = await api.post(`${BASE_URL}/timetable/upload-timetable`, {
       parsedData,
       meta
     });
