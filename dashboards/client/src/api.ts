@@ -121,6 +121,20 @@ interface Meta {
   academicCalendarId: string;
 }
 
+export interface Semester {
+  id: string;
+  semester_id: string; // semester_year.id
+  semester_number: number;
+}
+
+export const getSemestersBySemesterYear = async (
+  semesterYearId: string
+): Promise<Semester[]> => {
+  const response = await axios.get(`${BASE_URL}/superAdmin/${semesterYearId}`);
+  return response.data;
+};
+
+
 export const uploadTimetable = async (parsedData: any[], meta: Meta) => {
   try {
     const res = await api.post(`${BASE_URL}/timetable/upload-timetable`, {
@@ -143,10 +157,28 @@ interface UploadFacultyDataParams {
 
 export const uploadFacultyData = async (data: UploadFacultyDataParams): Promise<string> => {
   try {
-    const response = await axios.post<{ message: string }>('/api/upload/faculties', data);
+    const response = await axios.post<{ message: string }>(`${BASE_URL}/upload/faculties`, data);
     return response.data.message;
   } catch (error: any) {
     throw error.response?.data?.message || 'Upload failed';
+  }
+};
+
+interface UploadStudentDataPayload {
+  rows: string[][];
+  institute_id: string;
+  dept_id: string;
+  semester_year_id: string;
+  academic_calendar_id: string;
+}
+
+export const uploadStudentData = async (payload: UploadStudentDataPayload): Promise<any> => {
+  try {
+    const response = await axios.post(`${BASE_URL}/upload/upload-students`, payload);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error uploading student data:', error.response?.data || error.message);
+    throw error;
   }
 };
 

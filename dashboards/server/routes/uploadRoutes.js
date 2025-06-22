@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const { uploadStudentData } = require('../utils/uploadToUserinfo');
 const fetchGoogleSheet = require('../utils/fetchGoogleSheet');
 const pool = require('../config/timetableDbPool');
 
@@ -90,5 +90,22 @@ router.post('/faculties', async (req, res) => {
     client.release();
   }
 });
+
+router.post('/upload-students', async (req, res) => {
+  const { rows, institute_id, dept_id, semester_year_id, academic_calendar_id } = req.body;
+
+  if (!Array.isArray(rows) || !institute_id || !dept_id || !semester_year_id || !academic_calendar_id) {
+    return res.status(400).json({ error: 'Missing required fields or invalid data format' });
+  }
+
+  try {
+    await uploadStudentData(rows, institute_id, dept_id, semester_year_id, academic_calendar_id);
+    res.status(200).json({ message: 'Student data uploaded successfully.' });
+  } catch (err) {
+    console.error('Upload failed:', err.message);
+    res.status(500).json({ error: 'Failed to upload student data', details: err.message });
+  }
+});
+
 
 module.exports = router;

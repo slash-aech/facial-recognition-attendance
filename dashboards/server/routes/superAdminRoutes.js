@@ -6,7 +6,8 @@ const {
   getAllAcademicYears,
   getAllSemesters,
   getDepartmentsByInstitute,
-  getAcademicCalendarBySemester
+  getAcademicCalendarBySemester,
+  getSemestersBySemesterYearId
 } = require('../controllers/superAdminController');
 
 // Fetch all institutes
@@ -25,4 +26,5 @@ router.get('/:instituteId/departments', getDepartmentsByInstitute);
 
 router.get('/:semesterId', getAcademicCalendarBySemester);
 
+router.get('/:semesterYearId', getSemestersBySemesterYearId)
 module.exports = router;

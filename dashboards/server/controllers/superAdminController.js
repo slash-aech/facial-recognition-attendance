@@ -97,11 +97,38 @@ const getAcademicCalendarBySemester = async (req, res) => {
   }
 };
 
+const getSemestersBySemesterYearId = async (req, res) => {
+  const { semesterYearId } = req.params;
+
+  if (!semesterYearId) {
+    return res.status(400).json({ message: 'Missing semesterYearId' });
+  }
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM semester WHERE semester_id = $1',
+      [semesterYearId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No semesters found for this semesterYearId' });
+    }
+
+    res.status(200).json(result.rows);
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to fetch semester rows',
+      details: err.message,
+    });
+  }
+};
+
 module.exports = {
   getAllInstitutes,
   getAllDepartments,
   getAllAcademicYears,
   getAllSemesters,
   getDepartmentsByInstitute,
-  getAcademicCalendarBySemester
+  getAcademicCalendarBySemester,
+  getSemestersBySemesterYearId
 };
