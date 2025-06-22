@@ -117,7 +117,6 @@ export const fetchAcademicCalendarBySemester = async (semesterId?:string) => {
   return res.data;
 };
 
-// import axios from 'axios';
 
 interface Meta {
   instituteId: string;
@@ -135,6 +134,23 @@ export const uploadTimetable = async (parsedData: any[], meta: Meta) => {
     return res.data;
   } catch (error: any) {
     return { success: false, error: error.response?.data?.error || error.message };
+  }
+};
+
+interface UploadFacultyDataParams {
+  spreadsheet_id: string;
+  sheet_name: string;
+  institute_id: string;
+  dept_id: string;
+  academic_calendar_id: string;
+}
+
+export const uploadFacultyData = async (data: UploadFacultyDataParams): Promise<string> => {
+  try {
+    const response = await axios.post<{ message: string }>('/api/upload/faculties', data);
+    return response.data.message;
+  } catch (error: any) {
+    throw error.response?.data?.message || 'Upload failed';
   }
 };
 
