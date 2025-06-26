@@ -146,24 +146,32 @@ async function uploadTeacherTimeTable(data, academic_year_id, semester_year_id, 
     const header = data[0];
 
     // Find teacher
-    const teacherRes = await client.query(`SELECT * FROM teacher_enrollment_info WHERE short = $1`, [facultyShort]);
-    if (teacherRes.rowCount === 0) {
-      throw new Error('Teacher not found');
-    }
+    const teacherRes = await client.query(
+      `SELECT * FROM teacher_enrollment_info WHERE short = $1`,
+      [facultyShort]
+    );
+    if (teacherRes.rowCount === 0) throw new Error('Teacher not found');
     const teacher = teacherRes.rows[0];
 
-    // Find or create timetable
+    // Get or create timetable
     let timetable_id = teacher.timetable_id;
     if (!timetable_id) {
-      const existing = await client.query(`SELECT id FROM timetable WHERE academic_calendar_id = $1 AND department_id = $2`, [academic_calendar_id, dept_id]);
+      const existing = await client.query(
+        `SELECT id FROM timetable WHERE academic_calendar_id = $1 AND department_id = $2`,
+        [academic_calendar_id, dept_id]
+      );
       timetable_id = existing.rows[0]?.id;
       if (!timetable_id) {
         timetable_id = generateId();
-        await client.query(`INSERT INTO timetable (id, academic_calendar_id, department_id) VALUES ($1, $2, $3)`, [timetable_id, academic_calendar_id, dept_id]);
+        await client.query(
+          `INSERT INTO timetable (id, academic_calendar_id, department_id)
+           VALUES ($1, $2, $3)`,
+          [timetable_id, academic_calendar_id, dept_id]
+        );
       }
     }
 
-    // Loop through days (rows[1] to rows[n])
+    // Loop through timetable rows
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       const day = row[0];
@@ -177,61 +185,120 @@ async function uploadTeacherTimeTable(data, academic_year_id, semester_year_id, 
         const lines = entry.split(/\r?\n/);
         const [subjectLine, classLine, teacherShort, roomLine, typeLine] = lines;
 
-        const subjectId = subjectLine.split('(')[0];
-        const subjectName = subjectLine.split('(')[1]?.replace(')', '') || subjectId;
+        const subjectId = subjectLine.split('(')[0].trim();
+        const subjectName = subjectLine.split('(')[1]?.replace(')', '').trim() || subjectId;
 
-        const classIdPart = classLine.split('(')[0];
-        const batchShort = classLine.split('(')[1]?.replace(')', '') || classIdPart;
+        const classShort = classLine.split('(')[0].trim();
+        const batchShort = classLine.split('(')[1]?.replace(')', '').trim() || classShort;
 
         const lessonType = typeLine === '2' ? 'Lab' : 'Lecture';
+        const classroom_id = roomLine.trim();
 
-        // Subject
-        let subjectRes = await client.query(`SELECT subject_id FROM subject WHERE subject_id = $1`, [subjectId]);
+        // ➤ Subject
+        const subjectRes = await client.query(
+          `SELECT subject_id FROM subject WHERE subject_id = $1 AND timetable_id = $2`,
+          [subjectId, timetable_id]
+        );
         if (subjectRes.rowCount === 0) {
-          await client.query(`INSERT INTO subject (subject_id, name, short, timetable_id) VALUES ($1, $2, $3, $4)`, [subjectId, subjectName, subjectId, timetable_id]);
+          await client.query(
+            `INSERT INTO subject (subject_id, name, short, timetable_id)
+             VALUES ($1, $2, $3, $4)`,
+            [subjectId, subjectName, subjectId, timetable_id]
+          );
         }
 
-        // Class
-        let classRes = await client.query(`SELECT class_id FROM class WHERE short = $1 AND department_id = $2`, [classIdPart, dept_id]);
+        // ➤ Class
+        let classRes = await client.query(
+          `SELECT class_id FROM class WHERE short = $1 AND department_id = $2`,
+          [classShort, dept_id]
+        );
         let class_id = classRes.rows[0]?.class_id;
         if (!class_id) {
           class_id = generateId();
-          await client.query(`INSERT INTO class (class_id, name, short, department_id, institute_id, timetable_id) VALUES ($1, $2, $3, $4, $5, $6)`, [class_id, classIdPart, classIdPart, dept_id, institute_id, timetable_id]);
+          await client.query(
+            `INSERT INTO class (class_id, name, short, department_id, institute_id, timetable_id)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [class_id, classShort, classShort, dept_id, institute_id, timetable_id]
+          );
         }
 
-        // Batch
-        let batchRes = await client.query(`SELECT batch_id FROM batch WHERE short = $1 AND class_id = $2`, [batchShort, class_id]);
+        // ➤ Batch
+        let batchRes = await client.query(
+          `SELECT batch_id FROM batch WHERE short = $1 AND class_id = $2`,
+          [batchShort, class_id]
+        );
         let batch_id = batchRes.rows[0]?.batch_id;
         if (!batch_id) {
           batch_id = generateId();
-          await client.query(`INSERT INTO batch (batch_id, name, short, class_id) VALUES ($1, $2, $3, $4)`, [batch_id, batchShort, batchShort, class_id]);
+          await client.query(
+            `INSERT INTO batch (batch_id, name, short, class_id)
+             VALUES ($1, $2, $3, $4)`,
+            [batch_id, batchShort, batchShort, class_id]
+          );
         }
 
-        // Classroom
-        let classroom_id = roomLine;
-        let roomRes = await client.query(`SELECT classroom_id FROM classroom WHERE classroom_id = $1`, [classroom_id]);
+        // ➤ Classroom
+        let roomRes = await client.query(
+          `SELECT classroom_id FROM classroom WHERE classroom_id = $1 AND timetable_id = $2`,
+          [classroom_id, timetable_id]
+        );
         if (roomRes.rowCount === 0) {
-          await client.query(`INSERT INTO classroom (classroom_id, name, short, timetable_id) VALUES ($1, $1, $1, $2)`, [classroom_id, timetable_id]);
+          await client.query(
+            `INSERT INTO classroom (classroom_id, name, short, timetable_id)
+             VALUES ($1, $1, $1, $2)`,
+            [classroom_id, timetable_id]
+          );
         }
 
-        // Period
-        const [start, end] = periodText.split(' to ');
-        const periodRes = await client.query(`SELECT periods_id FROM periods WHERE start_time = $1 AND end_time = $2 AND timetable_id = $3`, [start, end, timetable_id]);
+        // ➤ Period
+        const [start, end] = periodText.split(' to ').map(p => p.trim());
+        let periodRes = await client.query(
+          `SELECT periods_id FROM periods WHERE start_time = $1 AND end_time = $2 AND timetable_id = $3`,
+          [start, end, timetable_id]
+        );
         let periods_id = periodRes.rows[0]?.periods_id;
         if (!periods_id) {
           periods_id = generateId();
-          await client.query(`INSERT INTO periods (periods_id, name, short, period, start_time, end_time, timetable_id) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [periods_id, `Period ${j}`, `P${j}`, j, start, end, timetable_id]);
+          await client.query(
+            `INSERT INTO periods (periods_id, name, short, period, start_time, end_time, timetable_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [periods_id, `Period ${j}`, `P${j}`, j, start, end, timetable_id]
+          );
         }
 
-        // Lesson
-        const lesson_id = generateId();
-        await client.query(`INSERT INTO lesson (lesson_id, timetable_id, class_ids, subject_id, periods_per_card, period_per_week, lesson_type, classroom_ids, group_ids) VALUES ($1, $2, $3, $4, 1, 2, $5, $6, $7)`, [lesson_id, timetable_id, [class_id], subjectId, lessonType, [classroom_id], [batch_id]]);
+        // ➤ Lesson
+        const lessonCheck = await client.query(
+          `SELECT lesson_id FROM lesson WHERE timetable_id = $1 AND subject_id = $2 AND $3 = ANY(class_ids) AND $4 = ANY(group_ids)`,
+          [timetable_id, subjectId, class_id, batch_id]
+        );
+        let lesson_id;
+        if (lessonCheck.rowCount > 0) {
+          lesson_id = lessonCheck.rows[0].lesson_id;
+        } else {
+          lesson_id = generateId();
+          await client.query(
+            `INSERT INTO lesson (lesson_id, timetable_id, class_ids, subject_id, periods_per_card, period_per_week, lesson_type, classroom_ids, group_ids)
+             VALUES ($1, $2, $3, $4, 1, 2, $5, $6, $7)`,
+            [lesson_id, timetable_id, [class_id], subjectId, lessonType, [classroom_id], [batch_id]]
+          );
+        }
 
-        // Card
-        const card_id = generateId();
-        await client.query(`INSERT INTO card (card_id, lesson_id, period, weeks, days, timetable_id, classroom_ids) VALUES ($1, $2, $3, $4, $5, $6, $7)`, [card_id, lesson_id, j, 1, day, timetable_id, [classroom_id]]);
+        // ➤ Card
+        const cardCheck = await client.query(
+          `SELECT card_id FROM card WHERE lesson_id = $1 AND period = $2 AND days = $3 AND timetable_id = $4`,
+          [lesson_id, j, day, timetable_id]
+        );
+        if (cardCheck.rowCount === 0) {
+          const card_id = generateId();
+          await client.query(
+            `INSERT INTO card (card_id, lesson_id, period, weeks, days, timetable_id, classroom_ids)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [card_id, lesson_id, j, 1, day, timetable_id, [classroom_id]]
+          );
+        }
       }
     }
+
     console.log('✅ Teacher timetable uploaded successfully.');
   } catch (err) {
     console.error('❌ Error uploading teacher timetable:', err.message);
@@ -240,8 +307,162 @@ async function uploadTeacherTimeTable(data, academic_year_id, semester_year_id, 
   }
 }
 
+async function uploadClassTimeTable(data, academic_year_id, semester_year_id, academic_calendar_id, class_short, dept_id, institute_id) {
+  const client = await pool.connect();
+  try {
+    const header = data[0];
+
+    // Get or create class
+    let classRes = await client.query(
+      `SELECT class_id FROM class WHERE short = $1 AND department_id = $2`,
+      [class_short, dept_id]
+    );
+    let class_id = classRes.rows[0]?.class_id;
+    if (!class_id) {
+      class_id = generateId();
+      await client.query(
+        `INSERT INTO class (class_id, name, short, department_id, institute_id, timetable_id)
+         VALUES ($1, $2, $3, $4, $5, NULL)`,
+        [class_id, class_short, class_short, dept_id, institute_id]
+      );
+    }
+
+    // Get or create timetable
+    let timetableRes = await client.query(
+      `SELECT id FROM timetable WHERE academic_calendar_id = $1 AND department_id = $2`,
+      [academic_calendar_id, dept_id]
+    );
+    let timetable_id = timetableRes.rows[0]?.id;
+    if (!timetable_id) {
+      timetable_id = generateId();
+      await client.query(
+        `INSERT INTO timetable (id, academic_calendar_id, department_id)
+         VALUES ($1, $2, $3)`,
+        [timetable_id, academic_calendar_id, dept_id]
+      );
+    }
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const day = row[0];
+
+      for (let j = 1; j < header.length; j++) {
+        const periodText = header[j];
+        const entry = row[j];
+
+        if (!entry || entry.trim() === 'Break' || entry.trim() === 'No Teaching Load') continue;
+
+        const lines = entry.split(/\r?\n/);
+        const [subjectLine, classLine, facultyShort, roomLine, typeLine] = lines;
+
+        const subjectId = subjectLine.split('(')[0].trim();
+        const subjectName = subjectLine.split('(')[1]?.replace(')', '').trim() || subjectId;
+
+        const batchShort = classLine.split('(')[1]?.replace(')', '').trim() || class_short;
+        const lessonType = typeLine === '2' ? 'Lab' : 'Lecture';
+
+        // ➤ Subject
+        let subjectRes = await client.query(
+          `SELECT subject_id FROM subject WHERE subject_id = $1 AND timetable_id = $2`,
+          [subjectId, timetable_id]
+        );
+        if (subjectRes.rowCount === 0) {
+          await client.query(
+            `INSERT INTO subject (subject_id, name, short, timetable_id)
+             VALUES ($1, $2, $3, $4)`,
+            [subjectId, subjectName, subjectId, timetable_id]
+          );
+        }
+
+        // ➤ Batch
+        let batchRes = await client.query(
+          `SELECT batch_id FROM batch WHERE short = $1 AND class_id = $2`,
+          [batchShort, class_id]
+        );
+        let batch_id = batchRes.rows[0]?.batch_id;
+        if (!batch_id) {
+          batch_id = generateId();
+          await client.query(
+            `INSERT INTO batch (batch_id, name, short, class_id)
+             VALUES ($1, $2, $3, $4)`,
+            [batch_id, batchShort, batchShort, class_id]
+          );
+        }
+
+        // ➤ Classroom
+        let classroom_id = roomLine.trim();
+        let roomRes = await client.query(
+          `SELECT classroom_id FROM classroom WHERE classroom_id = $1 AND timetable_id = $2`,
+          [classroom_id, timetable_id]
+        );
+        if (roomRes.rowCount === 0) {
+          await client.query(
+            `INSERT INTO classroom (classroom_id, name, short, timetable_id)
+             VALUES ($1, $1, $1, $2)`,
+            [classroom_id, timetable_id]
+          );
+        }
+
+        // ➤ Period
+        const [start, end] = periodText.split(' to ').map(s => s.trim());
+        let periodRes = await client.query(
+          `SELECT periods_id FROM periods WHERE start_time = $1 AND end_time = $2 AND timetable_id = $3`,
+          [start, end, timetable_id]
+        );
+        let periods_id = periodRes.rows[0]?.periods_id;
+        if (!periods_id) {
+          periods_id = generateId();
+          await client.query(
+            `INSERT INTO periods (periods_id, name, short, period, start_time, end_time, timetable_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [periods_id, `Period ${j}`, `P${j}`, j, start, end, timetable_id]
+          );
+        }
+
+        // ➤ Lesson
+        const lessonCheck = await client.query(
+          `SELECT lesson_id FROM lesson WHERE timetable_id = $1 AND subject_id = $2 AND $3 = ANY(class_ids) AND $4 = ANY(group_ids)`,
+          [timetable_id, subjectId, class_id, batch_id]
+        );
+        let lesson_id;
+        if (lessonCheck.rowCount > 0) {
+          lesson_id = lessonCheck.rows[0].lesson_id;
+        } else {
+          lesson_id = generateId();
+          await client.query(
+            `INSERT INTO lesson (lesson_id, timetable_id, class_ids, subject_id, periods_per_card, period_per_week, lesson_type, classroom_ids, group_ids)
+             VALUES ($1, $2, $3, $4, 1, 2, $5, $6, $7)`,
+            [lesson_id, timetable_id, [class_id], subjectId, lessonType, [classroom_id], [batch_id]]
+          );
+        }
+
+        // ➤ Card
+        const cardCheck = await client.query(
+          `SELECT card_id FROM card WHERE lesson_id = $1 AND period = $2 AND days = $3 AND timetable_id = $4`,
+          [lesson_id, j, day, timetable_id]
+        );
+        if (cardCheck.rowCount === 0) {
+          const card_id = generateId();
+          await client.query(
+            `INSERT INTO card (card_id, lesson_id, period, weeks, days, timetable_id, classroom_ids)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [card_id, lesson_id, j, 1, day, timetable_id, [classroom_id]]
+          );
+        }
+      }
+    }
+
+    console.log('✅ Class timetable uploaded successfully.');
+  } catch (err) {
+    console.error('❌ Error uploading class timetable:', err.message);
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
     uploadToUserInfo,
     uploadStudentData,
-    uploadTeacherTimeTable
+    uploadTeacherTimeTable,
+    uploadClassTimeTable
 };

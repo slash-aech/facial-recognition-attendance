@@ -182,25 +182,66 @@ export const uploadStudentData = async (payload: UploadStudentDataPayload): Prom
   }
 };
 
-interface UploadTeacherTimetablePayload {
-  data: any[][];  // Google Sheet parsed data
-  academic_year_id: string;
-  semester_year_id: string;
-  academic_calendar_id: string;
+interface UploadTeacherTimetableParams {
+  spreadsheetId: string;
+  sheetName: string;
+  academicYearId: string;
+  semesterYearId: string;
+  academicCalendarId: string;
   facultyShort: string;
-  dept_id: string;
-  institute_id: string;
+  departmentId: string;
+  instituteId: string;
 }
 
-export const uploadTeacherTimeTable = async (payload: UploadTeacherTimetablePayload): Promise<any> => {
+export const uploadTeacherTimetable = async (params: UploadTeacherTimetableParams) => {
   try {
-    const response = await api.post(`${BASE_URL}/upload/upload-teacher-timetable`, payload);
+    const response = await axios.post(`${BASE_URL}/upload/upload-teacher-timetable`, {
+      spreadsheet_id: params.spreadsheetId,
+      sheet_name: params.sheetName,
+      academic_year_id: params.academicYearId,
+      semester_year_id: params.semesterYearId,
+      academic_calendar_id: params.academicCalendarId,
+      facultyShort: params.facultyShort,
+      dept_id: params.departmentId,
+      institute_id: params.instituteId
+    });
+
     return response.data;
   } catch (error: any) {
-    console.error('Error uploading teacher timetable:', error.response?.data || error.message);
-    throw error.response?.data?.error || 'Upload failed';
+    console.error('❌ Error uploading teacher timetable:', error.response?.data || error.message);
+    throw error;
   }
 };
 
+interface UploadClassTimetableParams {
+  spreadsheetId: string;
+  sheetName: string;
+  academicYearId: string;
+  semesterYearId: string;
+  academicCalendarId: string;
+  classShort: string;
+  departmentId: string;
+  instituteId: string;
+}
+
+export const uploadClassTimetable = async (params: UploadClassTimetableParams) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/upload/upload-class-timetable`, {
+      spreadsheet_id: params.spreadsheetId,
+      sheet_name: params.sheetName,
+      academic_year_id: params.academicYearId,
+      semester_year_id: params.semesterYearId,
+      academic_calendar_id: params.academicCalendarId,
+      class_short: params.classShort,
+      dept_id: params.departmentId,
+      institute_id: params.instituteId
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ Error uploading class timetable:', error.response?.data || error.message);
+    throw error;
+  }
+};
 
 export default api;

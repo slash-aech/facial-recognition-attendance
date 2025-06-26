@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { uploadStudentData, uploadTeacherTimeTable } = require('../utils/uploadToUserinfo');
+const { uploadStudentData, uploadTeacherTimeTable, uploadClassTimeTable} = require('../utils/uploadToUserinfo');
 const fetchGoogleSheet = require('../utils/fetchGoogleSheet');
 const pool = require('../config/timetableDbPool');
 
@@ -91,25 +91,10 @@ router.post('/faculties', async (req, res) => {
   }
 });
 
-router.post('/upload-students', async (req, res) => {
-  const { rows, institute_id, dept_id, semester_year_id, academic_calendar_id } = req.body;
-
-  if (!Array.isArray(rows) || !institute_id || !dept_id || !semester_year_id || !academic_calendar_id) {
-    return res.status(400).json({ error: 'Missing required fields or invalid data format' });
-  }
-
-  try {
-    await uploadStudentData(rows, institute_id, dept_id, semester_year_id, academic_calendar_id);
-    res.status(200).json({ message: 'Student data uploaded successfully.' });
-  } catch (err) {
-    console.error('Upload failed:', err.message);
-    res.status(500).json({ error: 'Failed to upload student data', details: err.message });
-  }
-});
-
 router.post('/upload-teacher-timetable', async (req, res) => {
   const {
-    data,
+    spreadsheet_id,
+    sheet_name,
     academic_year_id,
     semester_year_id,
     academic_calendar_id,
@@ -119,7 +104,8 @@ router.post('/upload-teacher-timetable', async (req, res) => {
   } = req.body;
 
   if (
-    !Array.isArray(data) ||
+    !spreadsheet_id ||
+    !sheet_name ||
     !academic_year_id ||
     !semester_year_id ||
     !academic_calendar_id ||
@@ -128,17 +114,82 @@ router.post('/upload-teacher-timetable', async (req, res) => {
     !institute_id
   ) {
     return res.status(400).json({
-      error: 'Missing or invalid fields. Required: data, academic_year_id, semester_year_id, academic_calendar_id, facultyShort, dept_id, institute_id',
+      error: 'Missing required fields: spreadsheet_id, sheet_name, academic_year_id, semester_year_id, academic_calendar_id, facultyShort, dept_id, institute_id',
     });
   }
 
   try {
-    await uploadTeacherTimeTable(data, academic_year_id, semester_year_id, academic_calendar_id, facultyShort, dept_id, institute_id);
-    res.status(200).json({ message: 'Teacher timetable uploaded successfully.' });
+    const data = await fetchGoogleSheet(spreadsheet_id, sheet_name);
+    if (!data || !data.length) {
+      return res.status(400).json({ error: 'No data found in the provided Google Sheet.' });
+    }
+
+    await uploadTeacherTimeTable(
+      data,
+      academic_year_id,
+      semester_year_id,
+      academic_calendar_id,
+      facultyShort,
+      dept_id,
+      institute_id
+    );
+
+    res.status(200).json({ message: 'Teacher timetable uploaded successfully' });
   } catch (err) {
-    console.error('Upload failed:', err.message);
+    console.error('❌ Upload failed:', err.message);
     res.status(500).json({ error: 'Failed to upload teacher timetable', details: err.message });
   }
 });
+
+router.post('/upload-class-timetable', async (req, res) => {
+  const {
+    spreadsheet_id,
+    sheet_name,
+    academic_year_id,
+    semester_year_id,
+    academic_calendar_id,
+    class_short,
+    dept_id,
+    institute_id
+  } = req.body;
+
+  if (
+    !spreadsheet_id ||
+    !sheet_name ||
+    !academic_year_id ||
+    !semester_year_id ||
+    !academic_calendar_id ||
+    !class_short ||
+    !dept_id ||
+    !institute_id
+  ) {
+    return res.status(400).json({
+      error: 'Missing required fields: spreadsheet_id, sheet_name, academic_year_id, semester_year_id, academic_calendar_id, class_short, dept_id, institute_id',
+    });
+  }
+
+  try {
+    const data = await fetchGoogleSheet(spreadsheet_id, sheet_name);
+    if (!data || !data.length) {
+      return res.status(400).json({ error: 'No data found in the provided Google Sheet.' });
+    }
+
+    await uploadClassTimeTable(
+      data,
+      academic_year_id,
+      semester_year_id,
+      academic_calendar_id,
+      class_short,
+      dept_id,
+      institute_id
+    );
+
+    res.status(200).json({ message: 'Class timetable uploaded successfully' });
+  } catch (err) {
+    console.error('❌ Upload failed:', err.message);
+    res.status(500).json({ error: 'Failed to upload class timetable', details: err.message });
+  }
+});
+
 
 module.exports = router;
