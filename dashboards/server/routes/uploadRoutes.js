@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { uploadStudentData } = require('../utils/uploadToUserinfo');
+const { uploadStudentData, uploadTeacherTimeTable } = require('../utils/uploadToUserinfo');
 const fetchGoogleSheet = require('../utils/fetchGoogleSheet');
 const pool = require('../config/timetableDbPool');
 
@@ -107,5 +107,38 @@ router.post('/upload-students', async (req, res) => {
   }
 });
 
+router.post('/upload-teacher-timetable', async (req, res) => {
+  const {
+    data,
+    academic_year_id,
+    semester_year_id,
+    academic_calendar_id,
+    facultyShort,
+    dept_id,
+    institute_id
+  } = req.body;
+
+  if (
+    !Array.isArray(data) ||
+    !academic_year_id ||
+    !semester_year_id ||
+    !academic_calendar_id ||
+    !facultyShort ||
+    !dept_id ||
+    !institute_id
+  ) {
+    return res.status(400).json({
+      error: 'Missing or invalid fields. Required: data, academic_year_id, semester_year_id, academic_calendar_id, facultyShort, dept_id, institute_id',
+    });
+  }
+
+  try {
+    await uploadTeacherTimeTable(data, academic_year_id, semester_year_id, academic_calendar_id, facultyShort, dept_id, institute_id);
+    res.status(200).json({ message: 'Teacher timetable uploaded successfully.' });
+  } catch (err) {
+    console.error('Upload failed:', err.message);
+    res.status(500).json({ error: 'Failed to upload teacher timetable', details: err.message });
+  }
+});
 
 module.exports = router;

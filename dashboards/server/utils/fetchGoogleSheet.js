@@ -21,7 +21,7 @@ async function fetchGoogleSheet(spreadsheetId, sheetName) {
       console.log(`No data found in sheet "${sheetName}"`);
       return [];
     }
-
+    console.log(rows)
     return rows.slice(1); // Skip headers
   } catch (err) {
     console.error(`❌ Failed to fetch Google Sheet: ${err.message}`);
@@ -30,3 +30,4 @@ async function fetchGoogleSheet(spreadsheetId, sheetName) {
 }
 
 module.exports = fetchGoogleSheet;
+// fetchGoogleSheet('1Ri1uqbt6ITZwN55qzmmK7B4HJz1zgUAyEKeVDx0WxV8', 'HMS');

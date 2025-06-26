@@ -182,4 +182,25 @@ export const uploadStudentData = async (payload: UploadStudentDataPayload): Prom
   }
 };
 
+interface UploadTeacherTimetablePayload {
+  data: any[][];  // Google Sheet parsed data
+  academic_year_id: string;
+  semester_year_id: string;
+  academic_calendar_id: string;
+  facultyShort: string;
+  dept_id: string;
+  institute_id: string;
+}
+
+export const uploadTeacherTimeTable = async (payload: UploadTeacherTimetablePayload): Promise<any> => {
+  try {
+    const response = await api.post(`${BASE_URL}/upload/upload-teacher-timetable`, payload);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error uploading teacher timetable:', error.response?.data || error.message);
+    throw error.response?.data?.error || 'Upload failed';
+  }
+};
+
+
 export default api;
