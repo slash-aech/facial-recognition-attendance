@@ -202,35 +202,25 @@ export async function uploadTeacherTimetable(payload: TeacherTimetablePayload) {
 }
 
 interface UploadClassTimetableParams {
-  spreadsheetId: string;
-  sheetName: string;
-  academicYearId: string;
-  semesterYearId: string;
-  academicCalendarId: string;
-  classShort: string;
-  departmentId: string;
-  instituteId: string;
+  spreadsheet_id: string;
+  sheet_name: string;
+  academic_calendar_id: string;
+  class_id: string;
+  dept_id: string;
 }
 
-export const uploadClassTimetable = async (params: UploadClassTimetableParams) => {
+export async function uploadClassTimetable(params: UploadClassTimetableParams): Promise<string> {
   try {
-    const response = await axios.post(`${BASE_URL}/upload/upload-class-timetable`, {
-      spreadsheet_id: params.spreadsheetId,
-      sheet_name: params.sheetName,
-      academic_year_id: params.academicYearId,
-      semester_year_id: params.semesterYearId,
-      academic_calendar_id: params.academicCalendarId,
-      class_short: params.classShort,
-      dept_id: params.departmentId,
-      institute_id: params.instituteId
-    });
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/upload-class-timetable`,
+      params
+    );
 
-    return response.data;
+    return response.data.message;
   } catch (error: any) {
-    console.error('❌ Error uploading class timetable:', error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.error || 'Failed to upload class timetable');
   }
-};
+}
 
 export interface Faculty {
   id: string;
@@ -255,5 +245,16 @@ export const getFacultyByShortAndTimetable = async (
     throw error;
   }
 };
+
+export async function fetchClassByNameAndTimetable(name: string, timetable_id: string) {
+  const res = await fetch(`/api/class/getClassByNameAndTimetableid?name=${encodeURIComponent(name)}&timetable_id=${timetable_id}`);
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to fetch class');
+  }
+
+  return await res.json(); // class object
+}
 
 export default api;

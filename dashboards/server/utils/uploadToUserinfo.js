@@ -361,27 +361,24 @@ async function uploadTeacherTimeTable(data, academic_calendar_id, teacherEnrollm
   }
 }
 
-async function uploadClassTimeTable(data, academic_year_id, semester_year_id, academic_calendar_id, class_short, dept_id, institute_id) {
+export async function uploadClassTimeTable(
+  data: any[][],
+  academic_calendar_id: string,
+  class_id: string,
+  dept_id: string,
+) {
   const client = await pool.connect();
   try {
     const header = data[0];
 
-    // Get or create class
-    let classRes = await client.query(
-      `SELECT class_id FROM class WHERE short = $1 AND department_id = $2`,
-      [class_short, dept_id]
+    // ✅ Fetch class using class_id
+    const classRes = await client.query(
+      `SELECT * FROM class WHERE class_id = $1`,
+      [class_id]
     );
-    let class_id = classRes.rows[0]?.class_id;
-    if (!class_id) {
-      class_id = generateId();
-      await client.query(
-        `INSERT INTO class (class_id, name, short, department_id, institute_id, timetable_id)
-         VALUES ($1, $2, $3, $4, $5, NULL)`,
-        [class_id, class_short, class_short, dept_id, institute_id]
-      );
-    }
+    if (classRes.rowCount === 0) throw new Error('Class not found');
 
-    // Get or create timetable
+    // ✅ Get or create timetable
     let timetableRes = await client.query(
       `SELECT id FROM timetable WHERE academic_calendar_id = $1 AND department_id = $2`,
       [academic_calendar_id, dept_id]
@@ -412,11 +409,12 @@ async function uploadClassTimeTable(data, academic_year_id, semester_year_id, ac
         const subjectId = subjectLine.split('(')[0].trim();
         const subjectName = subjectLine.split('(')[1]?.replace(')', '').trim() || subjectId;
 
-        const batchShort = classLine.split('(')[1]?.replace(')', '').trim() || class_short;
+        const batchShort = classLine.split('(')[1]?.replace(')', '').trim() || 'Default';
         const lessonType = typeLine === '2' ? 'Lab' : 'Lecture';
+        const classroom_id = roomLine.trim();
 
         // ➤ Subject
-        let subjectRes = await client.query(
+        const subjectRes = await client.query(
           `SELECT subject_id FROM subject WHERE subject_id = $1 AND timetable_id = $2`,
           [subjectId, timetable_id]
         );
@@ -444,8 +442,7 @@ async function uploadClassTimeTable(data, academic_year_id, semester_year_id, ac
         }
 
         // ➤ Classroom
-        let classroom_id = roomLine.trim();
-        let roomRes = await client.query(
+        const roomRes = await client.query(
           `SELECT classroom_id FROM classroom WHERE classroom_id = $1 AND timetable_id = $2`,
           [classroom_id, timetable_id]
         );
@@ -499,16 +496,17 @@ async function uploadClassTimeTable(data, academic_year_id, semester_year_id, ac
           const card_id = generateId();
           await client.query(
             `INSERT INTO card (card_id, lesson_id, period, weeks, days, timetable_id, classroom_ids)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [card_id, lesson_id, j, 1, day, timetable_id, [classroom_id]]
+             VALUES ($1, $2, $3, 1, $4, $5, $6)`,
+            [card_id, lesson_id, j, day, timetable_id, [classroom_id]]
           );
         }
       }
     }
 
     console.log('✅ Class timetable uploaded successfully.');
-  } catch (err) {
+  } catch (err: any) {
     console.error('❌ Error uploading class timetable:', err.message);
+    throw err;
   } finally {
     client.release();
   }
