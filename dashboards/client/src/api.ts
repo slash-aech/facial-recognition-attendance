@@ -182,34 +182,24 @@ export const uploadStudentData = async (payload: UploadStudentDataPayload): Prom
   }
 };
 
-interface UploadTeacherTimetableParams {
-  spreadsheetId: string;
-  sheetName: string;
-  academicYearId: string;
-  semesterYearId: string;
-  academicCalendarId: string;
-  facultyShort: string;
-  departmentId: string;
-  instituteId: string;
+export interface TeacherTimetablePayload {
+  spreadsheet_id: string;
+  sheet_name: string;
+  academic_calendar_id: string;
+  teacher_enrollment_info_id: string;
+  dept_id: string;
+  institute_id: string;
 }
 
-export const uploadTeacherTimetable = async (params: UploadTeacherTimetableParams) => {
+export async function uploadTeacherTimetable(payload: TeacherTimetablePayload) {
   try {
-    const response = await axios.post(`${BASE_URL}/upload/upload-teacher-timetable`, {
-      spreadsheet_id: params.spreadsheetId,
-      sheet_name: params.sheetName,
-      academic_calendar_id: params.academicCalendarId,
-      facultyShort: params.facultyShort,
-      dept_id: params.departmentId,
-      institute_id: params.instituteId
-    });
-
+    const response = await axios.post('/api/timetable/upload-teacher-timetable', payload);
     return response.data;
   } catch (error: any) {
-    console.error('❌ Error uploading teacher timetable:', error.response?.data || error.message);
-    throw error;
+    console.error('Upload failed:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || 'Failed to upload timetable');
   }
-};
+}
 
 interface UploadClassTimetableParams {
   spreadsheetId: string;

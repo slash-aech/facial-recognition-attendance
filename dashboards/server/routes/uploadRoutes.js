@@ -4,9 +4,8 @@ const { uploadStudentData, uploadTeacherTimeTable, uploadClassTimeTable} = requi
 const fetchGoogleSheet = require('../utils/fetchGoogleSheet');
 const pool = require('../config/timetableDbPool');
 
-// Parse faculty rows
 function parseFacultyRow(row) {
-  const user_id = row[2]?.trim(); // Employee ID
+  const user_id = row[2]?.trim();
   const full_name = row[3]?.trim();
   const institute_email_id = row[4]?.trim();
   const short = row[1]?.trim();
@@ -44,7 +43,6 @@ router.post('/faculties', async (req, res) => {
     const rows = await fetchGoogleSheet(spreadsheet_id, sheet_name);
     if (!rows.length) return res.status(400).json({ message: 'No data found in the sheet.' });
 
-    // Step 1: Get or Create timetable
     const timetableResult = await client.query(
       `SELECT id FROM timetable WHERE academic_calendar_id = $1 AND department_id = $2 LIMIT 1`,
       [academic_calendar_id, dept_id]
@@ -62,7 +60,6 @@ router.post('/faculties', async (req, res) => {
       timetable_id = insertResult.rows[0].id;
     }
 
-    // Step 2: Upload each faculty
     for (let i = 1; i < rows.length; i++) {
       const { user_id, full_name, institute_email_id, short } = parseFacultyRow(rows[i]);
 
@@ -71,7 +68,6 @@ router.post('/faculties', async (req, res) => {
         continue;
       }
 
-      // 2.1 Insert/update user_info
       await client.query(
         `INSERT INTO user_info (user_id, full_name, institute_email_id, user_role, institute_id, dept_id)
          VALUES ($1, $2, $3, 'teacher', $4, $5)
@@ -83,13 +79,11 @@ router.post('/faculties', async (req, res) => {
         [user_id, full_name, institute_email_id, institute_id, dept_id]
       );
 
-      // 2.2 Get user_info.id
       const result = await client.query(`SELECT id FROM user_info WHERE user_id = $1`, [user_id]);
       const user_info_id = result.rows[0]?.id;
 
-      // 2.3 Insert/update user_authentication
       if (user_info_id) {
-        const hashedPassword = await bcrypt.hash(user_id, 10); // You can customize the password logic
+        const hashedPassword = await bcrypt.hash(user_id, 10);
 
         await client.query(`
           INSERT INTO user_authentication (email_id, password, user_info_id)
@@ -100,7 +94,6 @@ router.post('/faculties', async (req, res) => {
         `, [institute_email_id, hashedPassword, user_info_id]);
       }
 
-      // 2.4 Insert/update teacher_enrollment_info
       await client.query(
         `INSERT INTO teacher_enrollment_info (user_id, tt_display_full_name, short, timetable_id)
          VALUES ($1, $2, $3, $4)
@@ -125,50 +118,34 @@ router.post('/faculties', async (req, res) => {
 
 
 router.post('/upload-teacher-timetable', async (req, res) => {
-  const {
-    spreadsheet_id,
-    sheet_name,
-    academic_calendar_id,
-    facultyShort,
-    dept_id,
-    institute_id
-  } = req.body;
+  const { spreadsheet_id, sheet_name, academic_calendar_id, teacher_enrollment_info_id, dept_id, institute_id } = req.body;
 
-  if (
-    !spreadsheet_id ||
-    !sheet_name ||
-    !academic_year_id ||
-    !semester_year_id ||
-    !academic_calendar_id ||
-    !facultyShort ||
-    !dept_id ||
-    !institute_id
-  ) {
+  // Validation
+  if (!spreadsheet_id || !sheet_name || !academic_calendar_id || !teacher_enrollment_info_id || !dept_id || !institute_id) {
     return res.status(400).json({
-      error: 'Missing required fields: spreadsheet_id, sheet_name, academic_year_id, semester_year_id, academic_calendar_id, facultyShort, dept_id, institute_id',
+      message: 'Missing required fields: spreadsheet_id, sheet_name, academic_calendar_id, teacher_enrollment_info_id, dept_id, institute_id'
     });
   }
 
   try {
-    const data = await fetchGoogleSheet(spreadsheet_id, sheet_name);
-    if (!data || !data.length) {
-      return res.status(400).json({ error: 'No data found in the provided Google Sheet.' });
+    const sheetData = await fetchGoogleSheet(spreadsheet_id, sheet_name);
+
+    if (!sheetData || sheetData.length === 0) {
+      return res.status(400).json({ message: 'No data found in the sheet.' });
     }
 
     await uploadTeacherTimeTable(
-      data,
-      academic_year_id,
-      semester_year_id,
+      sheetData,
       academic_calendar_id,
-      facultyShort,
+      teacher_enrollment_info_id,
       dept_id,
       institute_id
     );
 
-    res.status(200).json({ message: 'Teacher timetable uploaded successfully' });
-  } catch (err) {
-    console.error('❌ Upload failed:', err.message);
-    res.status(500).json({ error: 'Failed to upload teacher timetable', details: err.message });
+    res.status(200).json({ message: '✅ Teacher timetable uploaded successfully.' });
+  } catch (error) {
+    console.error('❌ Route error:', error.message);
+    res.status(500).json({ message: 'Failed to upload timetable.', error: error.message });
   }
 });
 
@@ -221,6 +198,5 @@ router.post('/upload-class-timetable', async (req, res) => {
     res.status(500).json({ error: 'Failed to upload class timetable', details: err.message });
   }
 });
-
 
 module.exports = router;

@@ -192,20 +192,21 @@ async function uploadStudentData(rows, institute_id, dept_id, semester_year_id, 
   }
 }
 
-async function uploadTeacherTimeTable(data, academic_calendar_id, facultyShort, dept_id, institute_id) {
+async function uploadTeacherTimeTable(data, academic_calendar_id, teacherEnrollmentInfoId, dept_id, institute_id) {
   const client = await pool.connect();
+
   try {
     const header = data[0];
 
-    // Find teacher
+    // ✅ Get the teacher by teacher_enrollment_info.id (primary key)
     const teacherRes = await client.query(
-      `SELECT * FROM teacher_enrollment_info WHERE short = $1`,
-      [facultyShort]
+      `SELECT * FROM teacher_enrollment_info WHERE id = $1`,
+      [teacherEnrollmentInfoId]
     );
-    if (teacherRes.rowCount === 0) throw new Error('Teacher not found');
+    if (teacherRes.rowCount === 0) throw new Error('Teacher not found with given enrollment ID');
     const teacher = teacherRes.rows[0];
 
-    // Get or create timetable
+    // ✅ Get or create timetable
     let timetable_id = teacher.timetable_id;
     if (!timetable_id) {
       const existing = await client.query(
@@ -213,6 +214,7 @@ async function uploadTeacherTimeTable(data, academic_calendar_id, facultyShort, 
         [academic_calendar_id, dept_id]
       );
       timetable_id = existing.rows[0]?.id;
+
       if (!timetable_id) {
         timetable_id = generateId();
         await client.query(
@@ -223,7 +225,7 @@ async function uploadTeacherTimeTable(data, academic_calendar_id, facultyShort, 
       }
     }
 
-    // Loop through timetable rows
+    // ✅ Loop through timetable rows
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       const day = row[0];

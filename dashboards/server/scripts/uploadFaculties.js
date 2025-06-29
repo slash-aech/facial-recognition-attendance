@@ -4,7 +4,6 @@ const uploadToUserInfo = require('../utils/uploadToUserinfo');
 const spreadsheetId = '1Ri1uqbt6ITZwN55qzmmK7B4HJz1zgUAyEKeVDx0WxV8';
 const sheetName = 'SWFaculties';
 
-// Replace these with actual UUIDs from your DB
 const INSTITUTE_ID = '06692d66-91d7-46b3-9f28-1ac277ac4457';
 const DEPT_ID = '2fc5cc90-7b8e-462d-a80a-9e8995c6bafe';
 
