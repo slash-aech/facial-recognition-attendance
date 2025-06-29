@@ -8,6 +8,17 @@ input {
   box-sizing: border-box;
   background-color: #1a1a2e;
 }
+.profileCard h1,
+.profileCard h2,
+.profileCard h3,
+.profileCard h4,
+.profileCard h5,
+.profileCard h6 {
+  all: unset;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: white;
+}
 
 /* === Base Elements === */
 button {
@@ -79,7 +90,7 @@ select {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.logo {
+.logo, h1 {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 2rem;
@@ -231,3 +242,103 @@ select {
 .hiddenInput {
   display: none;
 }
+
+
+
+
+.mainContent {
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+input.date {
+  margin: 1rem 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.timetableTable,
+.weekGridTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.timetableTable th,
+.timetableTable td,
+.weekGridTable th,
+.weekGridTable td {
+  border: 1px solid #ccc;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.timetableTable th,
+.weekGridTable th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.timetableStatus.attended {
+  background-color: #d4edda;
+  color: #155724;
+  font-weight: 500;
+}
+
+.timetableStatus.notAttended {
+  background-color: #f8d7da;
+  color: #721c24;
+  font-weight: 500;
+}
+
+.weekGridWrapper {
+  overflow-x: auto;
+}
+
+.weekGridTable td {
+  min-width: 100px;
+  height: 60px;
+}
+
+
+
+
+
+
+
+
+.weekGridWrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.weekGridTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.weekGridTable th,
+.weekGridTable td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  color: white;
+}
+
+.weekGridTable th {
+  background-color: #2a2a40;
+}
+
+.attended {
+  background-color: #4caf50;
+  color: white;
+}
+
+.notAttended {
+  background-color: #f44336;
+  color: white;
+}
+
+

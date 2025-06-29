@@ -10,8 +10,6 @@ import TeacherDashboard from './pages/dashboard/TeacherDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import HODDashboard from './pages/dashboard/HODDashboard';
 import SuperadminDashboard from './pages/dashboard/SuperAdminDashboard';
-import Admin from './pages/dashboard/Admin';
-import Dummy from './pages/dashboard/dummy';
 
 export default function App() {
   const [role, setRole] = useState<string | null>(null);
@@ -93,35 +91,38 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole  }) => {
       <Route
         path="/student"
         element={
-          role === 'student' ? <StudentDashboard /> : <Navigate to="/" replace />
+          role === 'student' ? <StudentDashboard /> :  <StudentDashboard />
+          // role === 'student' ? <StudentDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/teacher"
         element={
-          role === 'teacher' ? <TeacherDashboard /> : <Navigate to="/" replace />
+          role === 'teacher' ? <TeacherDashboard /> : <TeacherDashboard />
+          // role === 'teacher' ? <TeacherDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/admin"
         element={ 
-          role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />
+          role === 'admin' ? <AdminDashboard /> : <AdminDashboard />
+          // role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/hod"
         element={
-          role === 'hod' ? <HODDashboard /> : <Navigate to="/" replace />
+          role === 'hod' ? <HODDashboard /> : <HODDashboard />
+          // role === 'hod' ? <HODDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/superadmin"
         element={
-          role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
+          role === 'superadmin' ? <SuperadminDashboard /> : <SuperadminDashboard />
+          // role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
         }
       />
-      <Route path='/adminDash' element={<Admin />} />
-      <Route path='/dummy' element={<Dummy />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

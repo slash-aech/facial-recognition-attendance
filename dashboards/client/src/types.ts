@@ -5,6 +5,7 @@ export interface Classroom {
   longitude: number;
   name: string;
   radius: number; // in meters
+  time?: string;  // optional time field for UI display
 }
 
 export interface AttendanceRecord {

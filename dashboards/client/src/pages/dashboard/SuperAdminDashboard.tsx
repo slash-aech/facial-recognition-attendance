@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
-import FacultyTimetableUpload from '../../components/facultyTimetableUpload';
-import StudentTimetableUpload from '../../components/studentTimetableUpload';
-import ClassroomManagement from '../../components/classroomManagement';
-import InstituteManagement from '../../components/instituteManagement';
-import LogoutButton from '../../components/LogoutButton';
+import FacultyTimetableUpload from '../../components/SuperAdminComponents/facultyTimetableUpload';
+import StudentTimetableUpload from '../../components/SuperAdminComponents/studentTimetableUpload';
+import ClassroomManagement from '../../components/SuperAdminComponents/classroomManagement';
+import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
+import TeacherReport from '../../components/SuperAdminComponents/Report'
+import StudentProfile from '../../components/SuperAdminComponents/ViewProfile'
+import TimetableViewer from '../../components/SuperAdminComponents/timetableViewer';
+import InstituteManagement from '../../components/SuperAdminComponents/InstituteManagement';
+
 
 const SuperadminDashboard = () => {
   const [activeSection, setActiveSection] = useState('faculty');
@@ -14,14 +18,21 @@ const SuperadminDashboard = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      
       case 'faculty':
         return <FacultyTimetableUpload />;
       case 'student':
         return <StudentTimetableUpload />;
       case 'classroom':
         return <ClassroomManagement />;
+        case 'timetable':
+          return <TimetableViewer />;
+      case 'report':
+        return <TeacherReport />;
       case 'institute':
         return <InstituteManagement />;
+        case 'profile':
+        return <StudentProfile />;
       default:
         return null;
     }
@@ -75,10 +86,28 @@ const SuperadminDashboard = () => {
               Classroom Management
             </li>
             <li
+              className={activeSection === 'timetable' ? styles.active : ''}
+              onClick={() => handleSectionClick('timetable')}
+            >
+              View Timetable
+            </li>
+            <li
+              className={activeSection === 'report' ? styles.active : ''}
+              onClick={() => handleSectionClick('report')}
+            >
+              Download Attendance Report
+            </li>
+            <li
               className={activeSection === 'institute' ? styles.active : ''}
               onClick={() => handleSectionClick('institute')}
             >
               Institute Management
+            </li>
+            <li
+              className={activeSection === 'profile' ? styles.active : ''}
+              onClick={() => handleSectionClick('profile')}
+            >
+              View Your Profile
             </li>
           </ul>
           <LogoutButton />

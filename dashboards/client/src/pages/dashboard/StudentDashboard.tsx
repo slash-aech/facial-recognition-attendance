@@ -1,83 +1,100 @@
-import { useEffect, useState } from 'react';
-import api from '../../api';
-import type { Classroom } from '../../types';
-import LogoutButton from '../../components/LogoutButton';
-import '../../styles/SuperAdminDashboard.module.css'
+import { useState, useEffect, useRef } from 'react';
+import styles from '../../styles/SuperAdminDashboard.module.css';
+import ClassroomManagement from '../../components/StudentComponents/classroomManagement';
+import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
+import TeacherReport from '../../components/StudentComponents/Report'
+import StudentProfile from '../../components/StudentComponents/ViewProfile'
+import TimetableViewer from '../../components/StudentComponents/timetableViewer';
 
-export default function StudentDashboard() {
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(true); // ✅ Track loading status
 
-  useEffect(() => {
-    setMessage('Mark attendance in following class');
+const SuperadminDashboard = () => {
+  const [activeSection, setActiveSection] = useState('faculty');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
-    api.get('/classrooms')
-      .then(res => {
-        const data = Array.isArray(res.data) ? res.data : [res.data];
-        setClassrooms(data);
-      })
-      .catch(() => setMessage('Failed to load classrooms'))
-      .finally(() => setLoading(false)); // ✅ Mark loading as complete
-  }, []);
-
-  const markAttendance = (classroom: Classroom) => {
-    if (!navigator.geolocation) {
-      alert('Geolocation not supported');
-      return;
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'classroom':
+        return <ClassroomManagement />;
+        case 'timetable':
+          return <TimetableViewer />;
+      case 'report':
+        return <TeacherReport />;
+        case 'profile':
+        return <StudentProfile />;
+      default:
+        return null;
     }
+  };
 
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        const { latitude, longitude } = pos.coords;
+  // Close sidebar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sidebarOpen && sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setSidebarOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sidebarOpen]);
 
-        api.post('/attendance/mark', {
-          classroom_id: classroom.id,
-          latitude,
-          longitude
-        })
-        .then(() => {
-          setMessage(`Attendance marked for ${classroom.name}`);
-          setLoading(true); // reload classrooms
-          return api.get('/classrooms');
-        })
-        .then(res => {
-          const data = Array.isArray(res.data) ? res.data : [res.data];
-          setClassrooms(data);
-        })
-        .catch(err => {
-          if (err.response?.data?.error) setMessage(err.response.data.error);
-          else setMessage('Failed to mark attendance');
-        })
-        .finally(() => setLoading(false));
-      },
-      () => alert('Some error occured, try checking location settings')
-    );
+  // When switching section, auto-close menu
+  const handleSectionClick = (section: string) => {
+    setActiveSection(section);
+    setSidebarOpen(false);
   };
 
   return (
-    <div className="student-dashboard">
-      <header className="dashboard-header">
-        <h1 className="gradient-title">
-          <span className="title-highlight">Student</span> Dashboard
-        </h1>
-        <LogoutButton />
-      </header>
+    <div className={styles.dashboardWrapper}>
+      {/* Overlay for background blur when menu is open */}
+      {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />}
 
-      {message && <div className="notification-bubble">{message}</div>}
+      <aside
+        ref={sidebarRef}
+        className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
+      >
+        <div className={styles.logo}>Student</div>
+        <nav>
+          <ul>
+            <li
+              className={activeSection === 'classroom' ? styles.active : ''}
+              onClick={() => handleSectionClick('classroom')}
+            >
+              Classroom Management
+            </li>
+            <li
+              className={activeSection === 'timetable' ? styles.active : ''}
+              onClick={() => handleSectionClick('timetable')}
+            >
+              View Timetable
+            </li>
+            <li
+              className={activeSection === 'report' ? styles.active : ''}
+              onClick={() => handleSectionClick('report')}
+            >
+              Download Attendance Report
+            </li>
+            <li
+              className={activeSection === 'profile' ? styles.active : ''}
+              onClick={() => handleSectionClick('profile')}
+            >
+              View Your Profile
+            </li>
+          </ul>
+          <LogoutButton />
+        </nav>
+      </aside>
 
-      {loading ? (
-        <p>Loading classrooms...</p>
-      ) :(
-        <ul>
-          {classrooms.filter(c => c.id).map(c => (
-  <li key={c.id}>
-    {c.name}
-    <button onClick={() => markAttendance(c)}>Mark Attendance</button>
-  </li>
-))}
-        </ul>
-      )}
+    <main className={styles.mainContent}>
+  <button className={styles.hamburger} onClick={() => setSidebarOpen(!sidebarOpen)}>
+    ☰
+  </button>
+  <div className={styles.contentWrapper}>
+    {renderContent()}
+  </div>
+</main>
     </div>
   );
-}
+};
+
+export default SuperadminDashboard;
