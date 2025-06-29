@@ -51,7 +51,6 @@ router.post('/faculties', async (req, res) => {
     );
 
     let timetable_id;
-
     if (timetableResult.rows.length > 0) {
       timetable_id = timetableResult.rows[0].id;
     } else {
@@ -72,7 +71,7 @@ router.post('/faculties', async (req, res) => {
         continue;
       }
 
-      // Insert/update user_info
+      // 2.1 Insert/update user_info
       await client.query(
         `INSERT INTO user_info (user_id, full_name, institute_email_id, user_role, institute_id, dept_id)
          VALUES ($1, $2, $3, 'teacher', $4, $5)
@@ -84,7 +83,24 @@ router.post('/faculties', async (req, res) => {
         [user_id, full_name, institute_email_id, institute_id, dept_id]
       );
 
-      // Insert/update teacher_enrollment_info
+      // 2.2 Get user_info.id
+      const result = await client.query(`SELECT id FROM user_info WHERE user_id = $1`, [user_id]);
+      const user_info_id = result.rows[0]?.id;
+
+      // 2.3 Insert/update user_authentication
+      if (user_info_id) {
+        const hashedPassword = await bcrypt.hash(user_id, 10); // You can customize the password logic
+
+        await client.query(`
+          INSERT INTO user_authentication (email_id, password, user_info_id)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (email_id) DO UPDATE SET
+            password = EXCLUDED.password,
+            user_info_id = EXCLUDED.user_info_id;
+        `, [institute_email_id, hashedPassword, user_info_id]);
+      }
+
+      // 2.4 Insert/update teacher_enrollment_info
       await client.query(
         `INSERT INTO teacher_enrollment_info (user_id, tt_display_full_name, short, timetable_id)
          VALUES ($1, $2, $3, $4)
@@ -95,7 +111,7 @@ router.post('/faculties', async (req, res) => {
         [user_id, full_name, short, timetable_id]
       );
 
-      console.log(`✔️ Processed user_id: ${user_id}`);
+      console.log(`✔️ Processed faculty user_id: ${user_id}`);
     }
 
     res.status(200).json({ message: 'Faculty data uploaded successfully.' });
@@ -106,6 +122,7 @@ router.post('/faculties', async (req, res) => {
     client.release();
   }
 });
+
 
 router.post('/upload-teacher-timetable', async (req, res) => {
   const {
