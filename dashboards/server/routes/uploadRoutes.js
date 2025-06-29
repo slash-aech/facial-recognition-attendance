@@ -9,9 +9,25 @@ function parseFacultyRow(row) {
   const user_id = row[2]?.trim(); // Employee ID
   const full_name = row[3]?.trim();
   const institute_email_id = row[4]?.trim();
-  const short = row[1]?.trim(); // Short Name
+  const short = row[1]?.trim();
   return { user_id, full_name, institute_email_id, short };
 }
+
+router.post('/upload-students', async (req, res) => {
+  const { rows, institute_id, dept_id, semester_year_id, academic_calendar_id } = req.body;
+
+  if (!rows || !institute_id || !dept_id || !semester_year_id || !academic_calendar_id) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+
+  try {
+    await uploadStudentData(rows, institute_id, dept_id, semester_year_id, academic_calendar_id);
+    return res.status(200).json({ message: 'Student data uploaded successfully.' });
+  } catch (error) {
+    console.error('❌ Upload error:', error);
+    return res.status(500).json({ error: 'Internal server error while uploading student data.' });
+  }
+});
 
 router.post('/faculties', async (req, res) => {
   const { spreadsheet_id, sheet_name, institute_id, dept_id, academic_calendar_id } = req.body;
@@ -95,8 +111,6 @@ router.post('/upload-teacher-timetable', async (req, res) => {
   const {
     spreadsheet_id,
     sheet_name,
-    academic_year_id,
-    semester_year_id,
     academic_calendar_id,
     facultyShort,
     dept_id,

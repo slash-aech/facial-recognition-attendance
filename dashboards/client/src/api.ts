@@ -198,8 +198,6 @@ export const uploadTeacherTimetable = async (params: UploadTeacherTimetableParam
     const response = await axios.post(`${BASE_URL}/upload/upload-teacher-timetable`, {
       spreadsheet_id: params.spreadsheetId,
       sheet_name: params.sheetName,
-      academic_year_id: params.academicYearId,
-      semester_year_id: params.semesterYearId,
       academic_calendar_id: params.academicCalendarId,
       facultyShort: params.facultyShort,
       dept_id: params.departmentId,
@@ -240,6 +238,30 @@ export const uploadClassTimetable = async (params: UploadClassTimetableParams) =
     return response.data;
   } catch (error: any) {
     console.error('❌ Error uploading class timetable:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export interface Faculty {
+  id: string;
+  user_id: string;
+  tt_display_full_name: string;
+  short: string;
+  color: string;
+  timetable_id: string;
+}
+
+export const getFacultyByShortAndTimetable = async (
+  short: string,
+  timetable_id: string
+): Promise<Faculty> => {
+  try {
+    const response = await axios.get<Faculty>(`${BASE_URL}/faculty/facultyDataByTimetableId`, {
+      params: { short, timetable_id },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching faculty:', error);
     throw error;
   }
 };
