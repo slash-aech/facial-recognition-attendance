@@ -10,6 +10,7 @@ import TeacherDashboard from './pages/dashboard/TeacherDashboard';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import HODDashboard from './pages/dashboard/HODDashboard';
 import SuperadminDashboard from './pages/dashboard/SuperAdminDashboard';
+import FunctionTester from './pages/test'
 
 export default function App() {
   const [role, setRole] = useState<string | null>(null);
@@ -120,6 +121,13 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole  }) => {
         path="/superadmin"
         element={
           role === 'superadmin' ? <SuperadminDashboard /> : <SuperadminDashboard />
+          // role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
+        }
+      />
+      <Route
+        path="/test"
+        element={
+          <FunctionTester />
           // role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
         }
       />

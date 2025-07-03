@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   fetchStudentByDepartment,
-  fetchAcademicYears,
   getSemestersBySemesterYear,
   uploadTimetable,
   uploadStudentData,
 } from '../../api';
 import StudentXMLPopup from './StudentXMLPopup';
-import type { AcademicYear, Semester } from '../../api';
+import type { Semester } from '../../api';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const StudentTimetableUpload = () => {
@@ -21,7 +20,6 @@ const StudentTimetableUpload = () => {
   const [selectedSemester, setSelectedSemester] = useState('');
 
   const [StudentList, setStudentList] = useState<any[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   const [showPopup, setShowPopup] = useState(false);
@@ -30,13 +28,6 @@ const StudentTimetableUpload = () => {
   const defaultInstituteId = '1';
   const defaultDepartmentId = '1';
 
-  // Initial load
-  useEffect(() => {
-    fetchAcademicYears().then(setAcademicYears).catch(console.error);
-    fetchStudentByDepartment(defaultInstituteId, defaultDepartmentId)
-      .then(setStudentList)
-      .catch(console.error);
-  }, []);
 
   // Load semesters when academic year changes
   useEffect(() => {
@@ -101,11 +92,7 @@ const StudentTimetableUpload = () => {
       <h1>Student Timetable Management</h1>
 
       {/* Selection Row */}
-      <div className={styles.headerRow}>
-        <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)}>
-          <option value="">Academic Year</option>
-          {academicYears.map(y => <option key={y.id} value={y.id}>{`${y.start_year}-${y.end_year}`}</option>)}
-        </select>
+      <div className={styles.headerRow}>=
 
         <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
           <option value="">Semester</option>

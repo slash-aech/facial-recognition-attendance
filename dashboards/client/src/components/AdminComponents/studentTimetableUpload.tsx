@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   fetchDepartmentsByInstitute,
-  fetchStudentByDepartment,
-  fetchAcademicYears,
   getSemestersBySemesterYear,
   uploadTimetable,
   uploadStudentData,
 } from '../../api';
 import StudentXMLPopup from './StudentXMLPopup';
-import type { AcademicYear, Semester } from '../../api';
+import type { AcademicYear, Semester } from '../../types';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const StudentTimetableUpload = () => {
@@ -18,12 +16,11 @@ const StudentTimetableUpload = () => {
   const [uploadMessage, setUploadMessage] = useState('');
 
   const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState('');
+  // const [selectedStudent, setSelectedStudent] = useState('');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
 
   const [departmentList, setDepartmentList] = useState<any[]>([]);
-  const [StudentList, setStudentList] = useState<any[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
@@ -35,26 +32,25 @@ const StudentTimetableUpload = () => {
   // Initial load
   useEffect(() => {
     fetchDepartmentsByInstitute(defaultInstituteId).then(setDepartmentList).catch(console.error);
-    fetchAcademicYears().then(setAcademicYears).catch(console.error);
   }, []);
 
-  // Load Student list when department changes
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchStudentByDepartment(defaultInstituteId, selectedDepartment)
-        .then(setStudentList)
-        .catch(console.error);
-    } else {
-      setStudentList([]);
-    }
-    setSelectedStudent('');
-  }, [selectedDepartment]);
 
   // Load semesters when academic year changes
   useEffect(() => {
     if (selectedAcademicYear) {
       getSemestersBySemesterYear(selectedAcademicYear)
-        .then(setSemesterList)
+        .then((apiSemesters) => {
+          // Map or cast API semesters to local Semester type if needed
+          setSemesterList(
+            apiSemesters.map((s: any) => ({
+              id: s.id,
+              semester_number: s.semester_number,
+              semester_type: s.semester_type,
+              academic_year_id: s.academic_year_id,
+              institute_id: s.institute_id,
+            }))
+          );
+        })
         .catch(console.error);
     } else {
       setSemesterList([]);
@@ -88,9 +84,9 @@ const StudentTimetableUpload = () => {
       const sheetId = sheetIdMatch ? sheetIdMatch[1] : null;
       if (!sheetId) return setUploadMessage('Invalid Google Sheet URL');
 
-      if (!selectedStudent) {
-        return setUploadMessage('Please select a Student');
-      }
+      // if (!selectedStudent) {
+      //   return setUploadMessage('Please select a Student');
+      // }
 
       try {
         const res = await uploadStudentData({
@@ -99,7 +95,7 @@ const StudentTimetableUpload = () => {
           institute_id: defaultInstituteId,
           dept_id: selectedDepartment,
           academic_calendar_id: selectedAcademicYear,
-          Student_id: selectedStudent,
+          // Student_id: selectedStudent,
         } as any);
         setUploadMessage(res || 'Student data uploaded');
       } catch (e: any) {

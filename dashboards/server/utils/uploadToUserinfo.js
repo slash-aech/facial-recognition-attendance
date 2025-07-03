@@ -1,4 +1,4 @@
-const pool = require('../config/timetableDbPool');
+const pool = require('../config/timetableDbPool.js');
 
 /**
  * Uploads rows to user_info table
@@ -361,11 +361,11 @@ async function uploadTeacherTimeTable(data, academic_calendar_id, teacherEnrollm
   }
 }
 
-export async function uploadClassTimeTable(
-  data: any[][],
-  academic_calendar_id: string,
-  class_id: string,
-  dept_id: string,
+async function uploadClassTimeTable(
+  data,
+  academic_calendar_id,
+  class_id,
+  dept_id,
 ) {
   const client = await pool.connect();
   try {
@@ -504,7 +504,7 @@ export async function uploadClassTimeTable(
     }
 
     console.log('✅ Class timetable uploaded successfully.');
-  } catch (err: any) {
+  } catch (err) {
     console.error('❌ Error uploading class timetable:', err.message);
     throw err;
   } finally {

@@ -179,7 +179,7 @@ router.post('/upload-class-timetable', async (req, res) => {
     await uploadClassTimeTable(data, academic_calendar_id, class_id, dept_id);
 
     res.status(200).json({ message: '✅ Class timetable uploaded successfully.' });
-  } catch (err: any) {
+  } catch (err) {
     console.error('❌ Upload failed:', err.message);
     res.status(500).json({ error: 'Failed to upload class timetable', details: err.message });
   }

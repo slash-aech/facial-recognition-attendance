@@ -39,6 +39,7 @@ export interface AcademicYear {
 export interface Semester {
   id: string;
   semester_type: string;
+  semester_number: number;
   academic_year_id: string;
   institute_id: string;
 }

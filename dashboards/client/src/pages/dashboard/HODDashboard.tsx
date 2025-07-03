@@ -3,8 +3,8 @@ import styles from '../../styles/SuperAdminDashboard.module.css';
 
 import FacultyTimetableUpload from '../../components/HODComponents/facultyTimetableUpload';
 import StudentTimetableUpload from '../../components/HODComponents/studentTimetableUpload';
-import ClassroomManagement from '../../components/SuperAdminComponents/classroomManagement';
-import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
+import ClassroomManagement from '../../components/HODComponents/classroomManagement';
+import LogoutButton from '../../components/LogoutButton';
 import TeacherReport from '../../components/HODComponents/Report'
 import StudentProfile from '../../components/HODComponents/ViewProfile'
 import TimetableViewer from '../../components/HODComponents/timetableViewer';

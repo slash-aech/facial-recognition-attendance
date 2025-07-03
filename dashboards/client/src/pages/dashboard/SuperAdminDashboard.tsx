@@ -3,7 +3,7 @@ import styles from '../../styles/SuperAdminDashboard.module.css';
 
 import FacultyTimetableUpload from '../../components/SuperAdminComponents/facultyTimetableUpload';
 import StudentTimetableUpload from '../../components/SuperAdminComponents/studentTimetableUpload';
-import ClassroomManagement from '../../components/SuperAdminComponents/classroomManagement';
+import AttendanceTeacher from '../../components/SuperAdminComponents/AttendanceTeacher';
 import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
 import TeacherReport from '../../components/SuperAdminComponents/Report'
 import StudentProfile from '../../components/SuperAdminComponents/ViewProfile'
@@ -24,7 +24,7 @@ const SuperadminDashboard = () => {
       case 'student':
         return <StudentTimetableUpload />;
       case 'classroom':
-        return <ClassroomManagement />;
+        return <AttendanceTeacher />;
         case 'timetable':
           return <TimetableViewer />;
       case 'report':

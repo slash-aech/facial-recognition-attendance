@@ -3,7 +3,7 @@ import styles from '../../styles/SuperAdminDashboard.module.css';
 
 import FacultyTimetableUpload from '../../components/AdminComponents/facultyTimetableUpload';
 import StudentTimetableUpload from '../../components/AdminComponents/studentTimetableUpload';
-import ClassroomManagement from '../../components/SuperAdminComponents/classroomManagement';
+import ClassroomManagement from '../../components/AdminComponents/classroomManagement';
 import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
 import TeacherReport from '../../components/AdminComponents/Report'
 import StudentProfile from '../../components/AdminComponents/ViewProfile'

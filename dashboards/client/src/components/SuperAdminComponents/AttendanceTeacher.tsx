@@ -3,28 +3,24 @@ import '../../styles/SuperAdminDashboard.module.css';
 import {
   fetchAllInstitutes,
   fetchDepartmentsByInstitute,
-  fetchAcademicYears,
   fetchSemesters,
   fetchAcademicCalendarBySemester
 } from '../../api';
 import type {
   Institute,
   Department,
-  AcademicYear,
   Semester,
   Classroom
 } from '../../types';
 
-export default function AttenanceTeacher() {
+export default function AttendanceTeacher() {
   const [institutes, setInstitutes] = useState<Institute[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
 
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
   const [academicCalendarId, setAcademicCalendarId] = useState('');
 
@@ -33,7 +29,6 @@ export default function AttenanceTeacher() {
 
   useEffect(() => {
     fetchAllInstitutes().then(setInstitutes);
-    fetchAcademicYears().then(setAcademicYears);
   }, []);
 
   useEffect(() => {
@@ -43,10 +38,10 @@ export default function AttenanceTeacher() {
   }, [selectedInstitute]);
 
   useEffect(() => {
-    if (selectedInstitute && selectedAcademicYear) {
-      fetchSemesters({ instituteId: selectedInstitute, academicYearId: selectedAcademicYear }).then(setSemesters);
+    if (selectedInstitute) {
+      fetchSemesters({ instituteId: selectedInstitute }).then(setSemesters);
     }
-  }, [selectedInstitute, selectedAcademicYear]);
+  }, [selectedInstitute]);
 
   useEffect(() => {
     if (selectedSemester) {
@@ -74,13 +69,13 @@ export default function AttenanceTeacher() {
   };
 
   const fetchClassrooms = async () => {
-    if (!selectedInstitute || !selectedDepartment || !selectedAcademicYear || !selectedSemester || !academicCalendarId) {
+    if (!selectedInstitute || !selectedDepartment || !selectedSemester || !academicCalendarId) {
       alert("Please select all dropdowns before loading classrooms.");
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:10000/api/classrooms?instituteId=${selectedInstitute}&departmentId=${selectedDepartment}&academicYearId=${selectedAcademicYear}&semesterId=${selectedSemester}&academicCalendarId=${academicCalendarId}`, {
+      const response = await fetch(`http://localhost:10000/api/classrooms?instituteId=${selectedInstitute}&departmentId=${selectedDepartment}&semesterId=${selectedSemester}&academicCalendarId=${academicCalendarId}`, {
         credentials: 'include'
       });
       const data = await response.json();
@@ -93,25 +88,12 @@ export default function AttenanceTeacher() {
 
   return (
     <div className="mainContent">
-      <header className="dashboard-header">
-        <h1 className="gradient-title">
-          <span className="title-highlight">Teacher</span> Dashboard
-        </h1>
-      </header>
-
-      {message && <div className="notification-bubble">{message}</div>}
-
       <div className="uploadSection">
         <h2>Select Filters</h2>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
           <select value={selectedInstitute} onChange={e => setSelectedInstitute(e.target.value)}>
             <option value="">Select Institute</option>
             {institutes.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-          </select>
-
-          <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)}>
-            <option value="">Select Academic Year</option>
-            {academicYears.map(ay => <option key={ay.id} value={ay.id}>{ay.start_year} - {ay.end_year}</option>)}
           </select>
 
           <select value={selectedDepartment} onChange={e => setSelectedDepartment(e.target.value)}>

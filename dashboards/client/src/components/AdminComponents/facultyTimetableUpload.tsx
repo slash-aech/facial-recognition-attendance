@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import {
   fetchDepartmentsByInstitute,
-  fetchAcademicYears,
   getSemestersBySemesterYear,
 } from '../../api';
 import XMLPopup from './FacultyXMLPopup';
@@ -40,10 +39,6 @@ export default function FacultyTimetableUpload() {
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
   const [showPopup, setShowPopup] = useState(false);
 
-  // Fetch academic years on mount
-  useEffect(() => {
-    fetchAcademicYears().then(setAcademicYears).catch(console.error);
-  }, []);
 
   // Fetch departments on mount (assuming one institute context)
   useEffect(() => {
@@ -52,28 +47,6 @@ export default function FacultyTimetableUpload() {
       .catch(console.error);
   }, []);
 
-  // Fetch faculty when department changes
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchFacultyByDepartment('1', selectedDepartment)
-        .then(setFacultyList)
-        .catch(console.error);
-    } else {
-      setFacultyList([]);
-    }
-    setSelectedFaculty('');
-  }, [selectedDepartment]);
-
-  // Fetch semesters when academic year changes
-  useEffect(() => {
-    if (selectedAcademicYear) {
-      getSemestersBySemesterYear(selectedAcademicYear)
-        .then(setSemesterList)
-        .catch(console.error);
-    } else {
-      setSemesterList([]);
-    }
-  }, [selectedAcademicYear]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -179,3 +152,4 @@ export default function FacultyTimetableUpload() {
     </div>
   );
 }
+

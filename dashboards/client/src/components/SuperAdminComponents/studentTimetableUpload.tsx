@@ -3,13 +3,13 @@ import {
   fetchAllInstitutes,
   fetchDepartmentsByInstitute,
   fetchStudentByDepartment,
-  fetchAcademicYears,
   getSemestersBySemesterYear,
   uploadTimetable,
   uploadStudentData,
 } from '../../api';
+import api from '../../api';
 import StudentXMLPopup from './StudentXMLPopup';
-import type { AcademicYear, Semester } from '../../api';
+import type { Semester } from '../../api';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const StudentTimetableUpload = () => {
@@ -27,15 +27,18 @@ const StudentTimetableUpload = () => {
   const [instituteList, setInstituteList] = useState<any[]>([]);
   const [departmentList, setDepartmentList] = useState<any[]>([]);
   const [StudentList, setStudentList] = useState<any[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   const [showPopup, setShowPopup] = useState(false);
 
+  // Teacher upload state
+  const [teacherFile, setTeacherFile] = useState<File | null>(null);
+  const [teacherUploadMessage, setTeacherUploadMessage] = useState('');
+  const [isTeacherUploading, setIsTeacherUploading] = useState(false);
+
   // Initial load
   useEffect(() => {
     fetchAllInstitutes().then(setInstituteList).catch(console.error);
-    fetchAcademicYears().then(setAcademicYears).catch(console.error);
   }, []);
 
   // Load departments when institute changes
@@ -55,7 +58,10 @@ const StudentTimetableUpload = () => {
   useEffect(() => {
     if (selectedDepartment) {
       fetchStudentByDepartment(selectedInstitute, selectedDepartment)
-        .then(setStudentList)
+        .then(res => {
+          if (Array.isArray(res)) setStudentList(res);
+          else setStudentList([res]);
+        })
         .catch(console.error);
     } else {
       setStudentList([]);
@@ -121,6 +127,42 @@ const StudentTimetableUpload = () => {
         setUploadMessage(e?.message || 'Failed to upload Student data');
       }
     }
+  }
+  const handleTeacherFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setTeacherFile(e.target.files[0]);
+    }
+  };
+
+  const handleTeacherUpload = async () => {
+    if (!teacherFile || !selectedInstitute || !selectedDepartment) {
+      setTeacherUploadMessage('Institute must be selected before uploading.');
+      return;
+    }
+    setIsTeacherUploading(true);
+    setTeacherUploadMessage('');
+    const formData = new FormData();
+    formData.append('file', teacherFile);
+    formData.append('instituteId', selectedInstitute);
+    formData.append('deptId', selectedDepartment);
+
+    try {
+        const res = await api.post('/student-data-upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      });
+    const result = res.data;
+      if (result.success) {
+        setTeacherUploadMessage('Student Excel Upload successful!');
+      } else {
+        setTeacherUploadMessage(`Upload failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (err: any) {
+      setTeacherUploadMessage(`Upload failed: ${err.message}`);
+    } finally {
+      setIsTeacherUploading(false);
+    }
   };
 
   return (
@@ -140,11 +182,6 @@ const StudentTimetableUpload = () => {
           onChange={e => setSelectedDepartment(e.target.value)}>
           <option value="">Department</option>
           {departmentList.map(dep => <option key={dep.id} value={dep.id}>{dep.name}</option>)}
-        </select>
-
-        <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)}>
-          <option value="">Academic Year</option>
-          {academicYears.map(y => <option key={y.id} value={y.id}>{`${y.start_year}-${y.end_year}`}</option>)}
         </select>
 
         <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
@@ -183,6 +220,51 @@ const StudentTimetableUpload = () => {
             {uploadMessage && <p>{uploadMessage}</p>}
           </div>
         )}
+      </div>
+      <h2 className={styles.sectionTitle}>Teacher Info Upload</h2>
+      <div className={styles.uploadBox}>
+        <div className={styles.uploadDropzone}>
+          <label htmlFor="teacherFileInput" className={styles.dropZone}>
+            Click or Drop Excel file
+            <input
+              id="teacherFileInput"
+              type="file"
+              accept=".xlsx"
+              onChange={handleTeacherFileChange}
+              className={styles.hiddenInput}
+            />
+          </label>
+
+          {teacherFile && (
+            <div style={{ marginTop: '10px', fontStyle: 'italic' }}>
+              Selected File: <strong>{teacherFile.name}</strong>
+              <button
+                onClick={() => {
+                  setTeacherFile(null);
+                  setTeacherUploadMessage('');
+                }}
+                style={{ marginLeft: '10px', padding: '2px 6px' }}
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={handleTeacherUpload}
+            disabled={!teacherFile || isTeacherUploading}
+            className={styles.uploadBtn}
+            style={{ marginTop: '12px' }}
+          >
+            {isTeacherUploading ? 'Uploading...' : 'Upload Excel'}
+          </button>
+
+          {!isTeacherUploading && teacherUploadMessage && (
+            <p style={{ color: teacherUploadMessage.includes('success') ? 'green' : 'red', marginTop: '10px' }}>
+              {teacherUploadMessage}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -107,10 +107,6 @@ export async function fetchDepartmentsByInstitute(instituteId: string) {
  * Fetch list of academic years.
  * @returns Array of academic year entries
  */
-export async function fetchAcademicYears() {
-  const response = await api.get(`${BASE_URL}/superAdmin/academic-years`);
-  return response.data; // Returns [{ id, year, ... }, ...]
-}
 
 /**
  * Fetch semesters, filtered by academic year or institute.
@@ -243,6 +239,8 @@ export async function uploadTeacherTimetable(payload: TeacherTimetablePayload) {
   }
 }
 
+
+
 // Params to upload class timetable
 interface UploadClassTimetableParams {
   spreadsheetId: string;
@@ -292,6 +290,19 @@ export interface Faculty {
  * @returns Faculty object
  */
 export const getFacultyByShortAndTimetable = async (
+  short: string,
+  timetable_id: string
+): Promise<Faculty> => {
+  try {
+    const response = await axios.get<Faculty>(`${BASE_URL}/faculty/facultyDataByTimetableId`, {
+      params: { short, timetable_id },
+    });
+    return response.data; // Returns faculty object with display name, timetable ID, etc.
+  } catch (error: any) {
+    throw error;
+  }
+};
+export const fetchStudentByDepartment = async (
   short: string,
   timetable_id: string
 ): Promise<Faculty> => {

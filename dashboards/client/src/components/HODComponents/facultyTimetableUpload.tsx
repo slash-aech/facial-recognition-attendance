@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  fetchFacultyByDepartment,
-  fetchAcademicYears,
   getSemestersBySemesterYear,
-  uploadTimetable,
-  uploadFacultyData,
 } from '../../api';
 import XMLPopup from './FacultyXMLPopup';
-import type { AcademicYear, Semester } from '../../api';
+import type { AcademicYear, Semester } from '../../types';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const FacultyTimetableUpload = () => {
@@ -17,8 +13,6 @@ const FacultyTimetableUpload = () => {
   const [uploadMessage, setUploadMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [showAddFaculty, setShowAddFaculty] = useState(false);
-  const [newFaculty, setNewFaculty] = useState({ name: '', subject: '', email: '' });
 
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
@@ -30,21 +24,22 @@ const FacultyTimetableUpload = () => {
 
   const [showPopup, setShowPopup] = useState(false);
 
-  // Hardcoded institute and department IDs
-  const defaultInstituteId = '1';
-  const defaultDepartmentId = '1';
 
-  useEffect(() => {
-    fetchAcademicYears().then(setAcademicYears).catch(console.error);
-    fetchFacultyByDepartment(defaultInstituteId, defaultDepartmentId)
-      .then(setFacultyList)
-      .catch(console.error);
-  }, []);
 
   useEffect(() => {
     if (selectedAcademicYear) {
       getSemestersBySemesterYear(selectedAcademicYear)
-        .then(setSemesterList)
+        .then((apiSemesters) => {
+          setSemesterList(
+            apiSemesters.map((s: any) => ({
+              id: s.id,
+              semester_number: s.semester_number,
+              semester_type: s.semester_type,
+              academic_year_id: s.academic_year_id,
+              institute_id: s.institute_id,
+            }))
+          );
+        })
         .catch(console.error);
     } else {
       setSemesterList([]);
@@ -69,12 +64,6 @@ const FacultyTimetableUpload = () => {
     }, 2000);
   };
 
-  const handleAddFaculty = (e: React.FormEvent) => {
-    e.preventDefault();
-    setNewFaculty({ name: '', subject: '', email: '' });
-    setShowAddFaculty(false);
-    setShowPreview(true);
-  };
 
   return (
     <div className={styles.sectionWrapper}>

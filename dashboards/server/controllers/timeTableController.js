@@ -67,22 +67,19 @@ const insertTimetableData = async (parsedData, meta) => {
         await insertMany(
             parsedData.filter(p => p.type === 'teacher'),
             `INSERT INTO teacher_enrollment_info (
-        teacher_id, firstname, lastname, name, short, gender, color, email, mobile, timetable_id
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+            enrollment_id, user_id, short, color, timetable_id, tt_display_full_name
+            ) VALUES ($1, $2, $3, $4, $5, $6)`,
             t => [
-                t.id,                     // $1 - teacher_id (custom string like "C1E0C9E76F9066B4")
-                t.firstname,              // $2
-                t.lastname,               // $3
-                t.name,                   // $4
-                t.short,                  // $5
-                t.gender,                 // $6
-                t.color,                  // $7
-                t.email,                  // $8
-                t.mobile,                 // $9
-                timetableId               // $10 - proper UUID
+                uuidv4(),        // enrollment_id
+                t.id,            // user_id
+                t.short || '',   // short
+                t.color || '#000000', // color
+                timetableId,     // timetable_id
+                t.name || ''     // tt_display_full_name
             ],
-            t => !!t.id     // ✅ validation to ensure required fields exist
-        );
+            t => !!t.id
+);
+
 
 
 

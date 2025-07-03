@@ -2,65 +2,40 @@ import { useEffect, useState } from 'react';
 import {
   fetchAllInstitutes,
   fetchDepartmentsByInstitute,
-  fetchFacultyByDepartment,
-  fetchAcademicYears,
-  getSemestersBySemesterYear,
-  uploadTimetable,
-  uploadFacultyData,
+  getSemestersBySemesterYear
 } from '../../api';
+import api from '../../api';
 import XMLPopup from './FacultyXMLPopup';
-import type { AcademicYear, Semester } from '../../api';
+import type { AcademicYear, Semester } from '../../types';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
-// Dummy data for preview table after upload
-const dummyFacultyData = [
-  { id: 1, name: 'Dr. John Doe', subject: 'Mathematics', email: 'john.doe@example.com' },
-  { id: 2, name: 'Dr. Jane Smith', subject: 'Physics', email: 'jane.smith@example.com' },
-  { id: 3, name: 'Dr. Alice Brown', subject: 'Chemistry', email: 'alice.brown@example.com' },
-];
-
 const FacultyTimetableUpload = () => {
-  // State for upload mode (xml or google sheet)
   const [uploadMode, setUploadMode] = useState<'xml' | 'google'>('xml');
-  // State for selected file (xml)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  // State for Google Sheet URL
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
-  // State for upload message
   const [uploadMessage, setUploadMessage] = useState('');
-  // State for loading bar
   const [isLoading, setIsLoading] = useState(false);
-  // State for showing preview table
-  const [showPreview, setShowPreview] = useState(false);
-  // State for showing add faculty modal/section
-  const [showAddFaculty, setShowAddFaculty] = useState(false);
-  // Dummy state for new faculty form
-  const [newFaculty, setNewFaculty] = useState({ name: '', subject: '', email: '' });
+  const [showPopup, setShowPopup] = useState(false);
+  const [teacherFile, setTeacherFile] = useState<File | null>(null);
+  const [teacherUploadMessage, setTeacherUploadMessage] = useState('');
+  const [isTeacherUploading, setIsTeacherUploading] = useState(false);
 
-  // Selection states
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
 
-  // Data lists
   const [instituteList, setInstituteList] = useState<any[]>([]);
   const [departmentList, setDepartmentList] = useState<any[]>([]);
   const [facultyList, setFacultyList] = useState<any[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
-  // Popup for XML preview
-  const [showPopup, setShowPopup] = useState(false);
-
-  // Fetch all institutes and academic years on mount
   useEffect(() => {
     fetchAllInstitutes().then(setInstituteList).catch(console.error);
-    fetchAcademicYears().then(setAcademicYears).catch(console.error);
   }, []);
 
-  // Fetch departments when institute changes
   useEffect(() => {
     if (selectedInstitute) {
       fetchDepartmentsByInstitute(selectedInstitute)
@@ -73,30 +48,6 @@ const FacultyTimetableUpload = () => {
     setSelectedFaculty('');
   }, [selectedInstitute]);
 
-  // Fetch faculty when department changes
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchFacultyByDepartment(selectedInstitute, selectedDepartment)
-        .then(setFacultyList)
-        .catch(console.error);
-    } else {
-      setFacultyList([]);
-    }
-    setSelectedFaculty('');
-  }, [selectedDepartment]);
-
-  // Fetch semesters when academic year changes
-  useEffect(() => {
-    if (selectedAcademicYear) {
-      getSemestersBySemesterYear(selectedAcademicYear)
-        .then(setSemesterList)
-        .catch(console.error);
-    } else {
-      setSemesterList([]);
-    }
-  }, [selectedAcademicYear]);
-
-  // Handle file input change for XML upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
@@ -104,39 +55,47 @@ const FacultyTimetableUpload = () => {
     }
   };
 
-  // Handle upload for both XML and Google Sheet
-  const handleUpload = async () => {
-    setIsLoading(true); // Show loading bar
-    setShowPreview(false); // Hide preview until upload completes
-    setUploadMessage('');
-    setTimeout(() => { // Simulate upload delay
-      setIsLoading(false);
-      setShowPreview(true); // Show preview table after upload
-      setUploadMessage('Upload successful! (dummy)');
-    }, 2000);
-    // ...existing code for actual upload can be placed here if needed...
+  const handleTeacherFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setTeacherFile(e.target.files[0]);
+    }
   };
 
-  // Handle dummy add faculty (just adds to dummyFacultyData for now)
-  const handleAddFaculty = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In real app, send to backend. Here, just show preview with new data.
-    dummyFacultyData.push({
-      id: dummyFacultyData.length + 1,
-      name: newFaculty.name,
-      subject: newFaculty.subject,
-      email: newFaculty.email,
-    });
-    setNewFaculty({ name: '', subject: '', email: '' });
-    setShowAddFaculty(false);
-    setShowPreview(true);
+  const handleTeacherUpload = async () => {
+    if (!teacherFile || !selectedInstitute || !selectedDepartment) {
+      setTeacherUploadMessage('Institute must be selected before uploading.');
+      return;
+    }
+    setIsTeacherUploading(true);
+    setTeacherUploadMessage('');
+    const formData = new FormData();
+    formData.append('file', teacherFile);
+    formData.append('instituteId', selectedInstitute);
+    formData.append('deptId', selectedDepartment);
+
+    try {
+        const res = await api.post('/faculty-data-upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      });
+    const result = res.data;
+      if (result.success) {
+        setTeacherUploadMessage('Teacher Excel Upload successful!');
+      } else {
+        setTeacherUploadMessage(`Upload failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (err: any) {
+      setTeacherUploadMessage(`Upload failed: ${err.message}`);
+    } finally {
+      setIsTeacherUploading(false);
+    }
   };
 
   return (
     <div className={styles.sectionWrapper}>
       <h1>Faculty Timetable Management</h1>
 
-      {/* Selection Row */}
       <div className={styles.headerRow}>
         <select value={selectedInstitute} onChange={e => setSelectedInstitute(e.target.value)}>
           <option value="">Institute</option>
@@ -150,46 +109,63 @@ const FacultyTimetableUpload = () => {
           <option value="">Department</option>
           {departmentList.map(dep => <option key={dep.id} value={dep.id}>{dep.name}</option>)}
         </select>
-
-        {/* Only show faculty dropdown in Google Sheets mode */}
-        {uploadMode === 'google' && (
-          <select
-            value={selectedFaculty}
-            disabled={!selectedDepartment}
-            onChange={e => setSelectedFaculty(e.target.value)}>
-            <option value="">Select Faculty</option>
-            {facultyList.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
-          </select>
-        )}
-
-        <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)}>
-          <option value="">Academic Year</option>
-          {academicYears.map(y => <option key={y.id} value={y.id}>{`${y.start_year}-${y.end_year}`}</option>)}
-        </select>
-
-        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
-          <option value="">Semester</option>
-          {semesterList.map(s => <option key={s.id} value={s.id}>{`Sem ${s.semester_number}`}</option>)}
-        </select>
       </div>
 
-      {/* Upload Mode Toggle */}
       <h2 className={styles.sectionTitle}>Timetable Upload</h2>
       <div className={styles.uploadModeSwitch}>
-        <button onClick={() => setUploadMode('xml')} className={uploadMode==='xml'?styles.activeTab:''}>XML Upload</button>
-        <button onClick={() => setUploadMode('google')} className={uploadMode==='google'?styles.activeTab:''}>Google Sheets</button>
+        <button onClick={() => setUploadMode('xml')} className={uploadMode === 'xml' ? styles.activeTab : ''}>XML Upload</button>
+        <button onClick={() => setUploadMode('google')} className={uploadMode === 'google' ? styles.activeTab : ''}>Google Sheets</button>
       </div>
 
-      {/* Upload Box */}
       <div className={styles.uploadBox}>
         {uploadMode === 'xml' ? (
           <div className={styles.uploadDropzone}>
             <label htmlFor="fileInput" className={styles.dropZone}>
               Click or Drop XML file
-              <input id="fileInput" type="file" accept=".xml" onChange={handleFileChange} className={styles.hiddenInput}/>
+              <input
+                id="fileInput"
+                type="file"
+                accept=".xml"
+                onChange={handleFileChange}
+                className={styles.hiddenInput}
+              />
             </label>
-            {selectedFile && showPopup && <XMLPopup file={selectedFile} onClose={() => setShowPopup(false)} />}
-            <button onClick={handleUpload} className={styles.uploadBtn}>Upload XML</button>
+
+            {selectedFile && (
+              <div style={{ marginTop: '10px', fontStyle: 'italic' }}>
+                Selected File: <strong>{selectedFile.name}</strong>
+                <button
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setShowPopup(false);
+                    setUploadMessage('');
+                  }}
+                  style={{ marginLeft: '10px', padding: '2px 6px' }}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
+            {isLoading && <p style={{ color: 'blue', marginTop: '10px' }}>Uploading...</p>}
+            {!isLoading && uploadMessage && (
+              <p style={{ color: uploadMessage.includes('success') ? 'green' : 'red', marginTop: '10px' }}>
+                {uploadMessage}
+              </p>
+            )}
+
+            {selectedFile && showPopup && (
+              <XMLPopup
+                file={selectedFile}
+                onClose={() => setShowPopup(false)}
+                meta={{
+                  instituteId: selectedInstitute,
+                  departmentId: selectedDepartment,
+                  semesterId: selectedSemester,
+                  academicCalendarId: selectedAcademicYear,
+                }}
+              />
+            )}
           </div>
         ) : (
           <div className={styles.uploadDropzone}>
@@ -199,10 +175,56 @@ const FacultyTimetableUpload = () => {
               value={googleSheetUrl}
               onChange={e => setGoogleSheetUrl(e.target.value)}
             />
-            <button onClick={handleUpload} className={styles.uploadBtn}>Submit URL</button>
+            <button className={styles.uploadBtn}>Submit URL</button>
             {uploadMessage && <p>{uploadMessage}</p>}
           </div>
         )}
+      </div>
+
+      <h2 className={styles.sectionTitle}>Teacher Info Upload</h2>
+      <div className={styles.uploadBox}>
+        <div className={styles.uploadDropzone}>
+          <label htmlFor="teacherFileInput" className={styles.dropZone}>
+            Click or Drop Excel file
+            <input
+              id="teacherFileInput"
+              type="file"
+              accept=".xlsx"
+              onChange={handleTeacherFileChange}
+              className={styles.hiddenInput}
+            />
+          </label>
+
+          {teacherFile && (
+            <div style={{ marginTop: '10px', fontStyle: 'italic' }}>
+              Selected File: <strong>{teacherFile.name}</strong>
+              <button
+                onClick={() => {
+                  setTeacherFile(null);
+                  setTeacherUploadMessage('');
+                }}
+                style={{ marginLeft: '10px', padding: '2px 6px' }}
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          <button
+            onClick={handleTeacherUpload}
+            disabled={!teacherFile || isTeacherUploading}
+            className={styles.uploadBtn}
+            style={{ marginTop: '12px' }}
+          >
+            {isTeacherUploading ? 'Uploading...' : 'Upload Excel'}
+          </button>
+
+          {!isTeacherUploading && teacherUploadMessage && (
+            <p style={{ color: teacherUploadMessage.includes('success') ? 'green' : 'red', marginTop: '10px' }}>
+              {teacherUploadMessage}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
