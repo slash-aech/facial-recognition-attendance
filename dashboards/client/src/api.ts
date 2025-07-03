@@ -2,7 +2,7 @@ import axios from "axios";
 import type { RegisterFacePayload } from './types';
 
 // Base API URL - change to production or development as needed
-const BASE_URL = "https://facial-recognition-attendance-backend.onrender.com"; // Localhost (you can switch to production if needed)
+const BASE_URL = "https://facial-recognition-attendance-backend.onrender.com/api"; // Localhost (you can switch to production if needed)
 
 // Create Axios instance with credentials
 const api = axios.create({
