@@ -2,14 +2,11 @@ import { useEffect, useState } from 'react';
 import {
   fetchAllInstitutes,
   fetchDepartmentsByInstitute,
-  fetchStudentByDepartment,
-  getSemestersBySemesterYear,
   uploadTimetable,
   uploadStudentData,
 } from '../../api';
 import api from '../../api';
 import StudentXMLPopup from './StudentXMLPopup';
-import type { Semester } from '../../api';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const StudentTimetableUpload = () => {
@@ -21,13 +18,13 @@ const StudentTimetableUpload = () => {
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedStudent, setSelectedStudent] = useState('');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
+  // const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  // const [selectedSemester, setSelectedSemester] = useState('');
 
   const [instituteList, setInstituteList] = useState<any[]>([]);
   const [departmentList, setDepartmentList] = useState<any[]>([]);
-  const [StudentList, setStudentList] = useState<any[]>([]);
-  const [semesterList, setSemesterList] = useState<Semester[]>([]);
+  // const [semesterList, setSemesterList] = useState<Semester[]>([]);
+  // const [studentList, setStudentList] = useState<any[]>([]);
 
   const [showPopup, setShowPopup] = useState(false);
 
@@ -54,31 +51,7 @@ const StudentTimetableUpload = () => {
     setSelectedStudent('');
   }, [selectedInstitute]);
 
-  // Load Student list when department changes
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchStudentByDepartment(selectedInstitute, selectedDepartment)
-        .then(res => {
-          if (Array.isArray(res)) setStudentList(res);
-          else setStudentList([res]);
-        })
-        .catch(console.error);
-    } else {
-      setStudentList([]);
-    }
-    setSelectedStudent('');
-  }, [selectedDepartment]);
 
-  // Load semesters when academic year changes
-  useEffect(() => {
-    if (selectedAcademicYear) {
-      getSemestersBySemesterYear(selectedAcademicYear)
-        .then(setSemesterList)
-        .catch(console.error);
-    } else {
-      setSemesterList([]);
-    }
-  }, [selectedAcademicYear]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -94,8 +67,8 @@ const StudentTimetableUpload = () => {
         const meta = {
           instituteId: selectedInstitute,
           departmentId: selectedDepartment,
-          semesterId: selectedSemester,
-          academicCalendarId: selectedAcademicYear,
+          semesterId: 'selectedSemester',
+          academicCalendarId: '',
           // Student ignored for XML
         };
         const res = await uploadTimetable(parsedData, meta);
@@ -118,7 +91,7 @@ const StudentTimetableUpload = () => {
           sheet_name: 'Sheet1',
           institute_id: selectedInstitute,
           dept_id: selectedDepartment,
-          academic_calendar_id: selectedAcademicYear,
+          academic_calendar_id: 'selectedAcademicYear',
           // pass Student id
           Student_id: selectedStudent,
         } as any);
@@ -184,10 +157,6 @@ const StudentTimetableUpload = () => {
           {departmentList.map(dep => <option key={dep.id} value={dep.id}>{dep.name}</option>)}
         </select>
 
-        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
-          <option value="">Semester</option>
-          {semesterList.map(s => <option key={s.id} value={s.id}>{`Sem ${s.semester_number}`}</option>)}
-        </select>
       </div>
 
       {/* Upload Mode Toggle */}

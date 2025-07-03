@@ -10,7 +10,7 @@ const dummyTimetable = [
   { id: 6, name: 'CS', startTime: '11:00', endTime: '12:00', attended: false, day: 'Friday' },
 ];
 
-const institutes = ['ABC Institute', 'XYZ Institute'];
+// const institutes = ['ABC Institute', 'XYZ Institute'];
 const academicYears = ['2023-2024', '2024-2025'];
 const departments = ['CSE', 'ECE', 'ME', 'CE'];
 const facultyList = ['Dr. John', 'Dr. Smith'];

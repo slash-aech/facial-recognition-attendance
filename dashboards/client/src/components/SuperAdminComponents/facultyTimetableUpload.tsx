@@ -2,11 +2,9 @@ import { useEffect, useState } from 'react';
 import {
   fetchAllInstitutes,
   fetchDepartmentsByInstitute,
-  getSemestersBySemesterYear
 } from '../../api';
 import api from '../../api';
 import XMLPopup from './FacultyXMLPopup';
-import type { AcademicYear, Semester } from '../../types';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const FacultyTimetableUpload = () => {
@@ -14,7 +12,8 @@ const FacultyTimetableUpload = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
+  let isLoading = false; // Placeholder for loading state, can be replaced with actual state management
   const [showPopup, setShowPopup] = useState(false);
   const [teacherFile, setTeacherFile] = useState<File | null>(null);
   const [teacherUploadMessage, setTeacherUploadMessage] = useState('');
@@ -22,15 +21,15 @@ const FacultyTimetableUpload = () => {
 
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedFaculty, setSelectedFaculty] = useState('');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
+  // const [selectedFaculty, setSelectedFaculty] = useState('');
+  // const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  // const [selectedSemester, setSelectedSemester] = useState('');
 
   const [instituteList, setInstituteList] = useState<any[]>([]);
   const [departmentList, setDepartmentList] = useState<any[]>([]);
-  const [facultyList, setFacultyList] = useState<any[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [semesterList, setSemesterList] = useState<Semester[]>([]);
+  // const [facultyList, setFacultyList] = useState<any[]>([]);
+  // const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  // const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   useEffect(() => {
     fetchAllInstitutes().then(setInstituteList).catch(console.error);
@@ -45,7 +44,6 @@ const FacultyTimetableUpload = () => {
       setDepartmentList([]);
     }
     setSelectedDepartment('');
-    setSelectedFaculty('');
   }, [selectedInstitute]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,8 +159,8 @@ const FacultyTimetableUpload = () => {
                 meta={{
                   instituteId: selectedInstitute,
                   departmentId: selectedDepartment,
-                  semesterId: selectedSemester,
-                  academicCalendarId: selectedAcademicYear,
+                  semesterId: 'selectedSemester',
+                  academicCalendarId: 'selectedAcademicYear',
                 }}
               />
             )}

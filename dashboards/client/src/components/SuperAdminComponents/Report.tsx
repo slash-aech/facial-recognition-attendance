@@ -1,5 +1,5 @@
 // Import necessary hooks and styles
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import '../../styles/SuperAdminDashboard.module.css';
 
 export default function TeacherReportDownload() {

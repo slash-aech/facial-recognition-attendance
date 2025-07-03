@@ -24,7 +24,7 @@ export default function AttendanceTeacher() {
   const [selectedSemester, setSelectedSemester] = useState('');
   const [academicCalendarId, setAcademicCalendarId] = useState('');
 
-  const [message, setMessage] = useState('');
+  // const [message, setMessage] = useState('');
   const [activeClassroomId, setActiveClassroomId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function AttendanceTeacher() {
 
   const startAttendance = (classroomId: number) => {
     setActiveClassroomId(classroomId);
-    setMessage(`Started attendance for classroom ID: ${classroomId}`);
+    // setMessage(`Started attendance for classroom ID: ${classroomId}`);
     setTimeout(() => {
       if (activeClassroomId === classroomId) {
         stopAttendance(classroomId);
@@ -64,7 +64,7 @@ export default function AttendanceTeacher() {
   const stopAttendance = (classroomId: number) => {
     if (activeClassroomId === classroomId) {
       setActiveClassroomId(null);
-      setMessage(`Stopped attendance for classroom ID: ${classroomId}`);
+      // setMessage(`Stopped attendance for classroom ID: ${classroomId}`);
     }
   };
 
@@ -82,7 +82,7 @@ export default function AttendanceTeacher() {
       setClassrooms(data);
     } catch (error) {
       console.error('Failed to fetch classrooms:', error);
-      setMessage('Error fetching classrooms');
+      // setMessage('Error fetching classrooms');
     }
   };
 

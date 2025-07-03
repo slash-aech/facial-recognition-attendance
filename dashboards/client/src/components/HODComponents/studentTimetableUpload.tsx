@@ -1,12 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  fetchStudentByDepartment,
-  getSemestersBySemesterYear,
   uploadTimetable,
   uploadStudentData,
 } from '../../api';
 import StudentXMLPopup from './StudentXMLPopup';
-import type { Semester } from '../../api';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const StudentTimetableUpload = () => {
@@ -15,12 +12,11 @@ const StudentTimetableUpload = () => {
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
 
-  const [selectedStudent, setSelectedStudent] = useState('');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
+  // const [selectedStudent, setSelectedStudent] = useState('');
+  // const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
 
-  const [StudentList, setStudentList] = useState<any[]>([]);
-  const [semesterList, setSemesterList] = useState<Semester[]>([]);
+  // const [StudentList, setStudentList] = useState<any[]>([]);
+  // const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   const [showPopup, setShowPopup] = useState(false);
 
@@ -28,17 +24,6 @@ const StudentTimetableUpload = () => {
   const defaultInstituteId = '1';
   const defaultDepartmentId = '1';
 
-
-  // Load semesters when academic year changes
-  useEffect(() => {
-    if (selectedAcademicYear) {
-      getSemestersBySemesterYear(selectedAcademicYear)
-        .then(setSemesterList)
-        .catch(console.error);
-    } else {
-      setSemesterList([]);
-    }
-  }, [selectedAcademicYear]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -54,8 +39,8 @@ const StudentTimetableUpload = () => {
         const meta = {
           instituteId: defaultInstituteId,
           departmentId: defaultDepartmentId,
-          semesterId: selectedSemester,
-          academicCalendarId: selectedAcademicYear,
+          semesterId: 'selectedSemester',
+          academicCalendarId: 'selectedAcademicYear',
         };
         const res = await uploadTimetable(parsedData, meta);
         setUploadMessage(res?.message || 'Timetable uploaded successfully');
@@ -67,18 +52,14 @@ const StudentTimetableUpload = () => {
       const sheetId = sheetIdMatch ? sheetIdMatch[1] : null;
       if (!sheetId) return setUploadMessage('Invalid Google Sheet URL');
 
-      if (!selectedStudent) {
-        return setUploadMessage('Please select a Student');
-      }
-
       try {
         const res = await uploadStudentData({
           spreadsheet_id: sheetId,
           sheet_name: 'Sheet1',
           institute_id: defaultInstituteId,
           dept_id: defaultDepartmentId,
-          academic_calendar_id: selectedAcademicYear,
-          Student_id: selectedStudent,
+          academic_calendar_id: 'selectedAcademicYear',
+          Student_id: 'selectedStudent',
         } as any);
         setUploadMessage(res || 'Student data uploaded');
       } catch (e: any) {
@@ -90,15 +71,6 @@ const StudentTimetableUpload = () => {
   return (
     <div className={styles.sectionWrapper}>
       <h1>Student Timetable Management</h1>
-
-      {/* Selection Row */}
-      <div className={styles.headerRow}>=
-
-        <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
-          <option value="">Semester</option>
-          {semesterList.map(s => <option key={s.id} value={s.id}>{`Sem ${s.semester_number}`}</option>)}
-        </select>
-      </div>
 
       {/* Upload Mode Toggle */}
       <h2 className={styles.sectionTitle}>Timetable Upload</h2>

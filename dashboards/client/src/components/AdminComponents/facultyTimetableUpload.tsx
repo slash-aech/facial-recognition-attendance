@@ -2,18 +2,17 @@
 import { useEffect, useState } from 'react';
 import {
   fetchDepartmentsByInstitute,
-  getSemestersBySemesterYear,
 } from '../../api';
 import XMLPopup from './FacultyXMLPopup';
 import type { AcademicYear, Semester } from '../../types';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 // Dummy data for preview table
-const dummyFacultyData = [
-  { id: 1, name: 'Dr. John Doe', subject: 'Mathematics', email: 'john.doe@example.com' },
-  { id: 2, name: 'Dr. Jane Smith', subject: 'Physics', email: 'jane.smith@example.com' },
-  { id: 3, name: 'Dr. Alice Brown', subject: 'Chemistry', email: 'alice.brown@example.com' },
-];
+// const dummyFacultyData = [
+//   { id: 1, name: 'Dr. John Doe', subject: 'Mathematics', email: 'john.doe@example.com' },
+//   { id: 2, name: 'Dr. Jane Smith', subject: 'Physics', email: 'jane.smith@example.com' },
+//   { id: 3, name: 'Dr. Alice Brown', subject: 'Chemistry', email: 'alice.brown@example.com' },
+// ];
 
 export default function FacultyTimetableUpload() {
   // Upload settings
@@ -21,10 +20,8 @@ export default function FacultyTimetableUpload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [showAddFaculty, setShowAddFaculty] = useState(false);
-  const [newFaculty, setNewFaculty] = useState({ name: '', subject: '', email: '' });
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [showreview, setShowPreview] = useState(false);
 
   // Selections
   const [selectedDepartment, setSelectedDepartment] = useState('');
@@ -34,9 +31,9 @@ export default function FacultyTimetableUpload() {
 
   // Data
   const [departmentList, setDepartmentList] = useState<any[]>([]);
-  const [facultyList, setFacultyList] = useState<any[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
-  const [semesterList, setSemesterList] = useState<Semester[]>([]);
+  const [facultyList] = useState<any[]>([]);
+  const [academicYears] = useState<AcademicYear[]>([]);
+  const [semesterList] = useState<Semester[]>([]);
   const [showPopup, setShowPopup] = useState(false);
 
 
@@ -56,28 +53,16 @@ export default function FacultyTimetableUpload() {
   };
 
   const handleUpload = async () => {
-    setIsLoading(true);
-    setShowPreview(false);
+    // setIsLoading(true);
+    // setShowPreview(false);
     setUploadMessage('');
     setTimeout(() => {
-      setIsLoading(false);
-      setShowPreview(true);
+      // setIsLoading(false);
+      // setShowPreview(true);
       setUploadMessage('Upload successful! (dummy)');
     }, 2000);
   };
 
-  const handleAddFaculty = (e: React.FormEvent) => {
-    e.preventDefault();
-    dummyFacultyData.push({
-      id: dummyFacultyData.length + 1,
-      name: newFaculty.name,
-      subject: newFaculty.subject,
-      email: newFaculty.email,
-    });
-    setNewFaculty({ name: '', subject: '', email: '' });
-    setShowAddFaculty(false);
-    setShowPreview(true);
-  };
 
   return (
     <div className={styles.sectionWrapper}>

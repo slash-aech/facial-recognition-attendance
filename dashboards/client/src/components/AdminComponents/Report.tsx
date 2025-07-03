@@ -1,5 +1,5 @@
 // Import necessary hooks and styles
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import '../../styles/SuperAdminDashboard.module.css';
 
 export default function TeacherReportDownload() {
@@ -13,14 +13,14 @@ export default function TeacherReportDownload() {
   const [message, setMessage] = useState('');
 
   // States for dropdown selections
-  const [selectedInstitute, setSelectedInstitute] = useState('');
+  const [selectedInstitute] = useState('');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedSemesterType, setSelectedSemesterType] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedClassroom, setSelectedClassroom] = useState('');
 
   // Dummy data for dropdowns - to be replaced by actual API fetch
-  const institutes = ['Institute A', 'Institute B'];
+  // const institutes = ['Institute A', 'Institute B'];
   const academicYears = ['2023-2024', '2024-2025'];
   const departments = ['CSE', 'ECE', 'MECH'];
   const semesterTypes = ['Odd', 'Even'];

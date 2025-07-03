@@ -6,7 +6,7 @@ import {
   uploadStudentData,
 } from '../../api';
 import StudentXMLPopup from './StudentXMLPopup';
-import type { AcademicYear, Semester } from '../../types';
+import type { Semester } from '../../types';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 
 const StudentTimetableUpload = () => {
@@ -17,11 +17,11 @@ const StudentTimetableUpload = () => {
 
   const [selectedDepartment, setSelectedDepartment] = useState('');
   // const [selectedStudent, setSelectedStudent] = useState('');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
+  const [selectedAcademicYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
 
   const [departmentList, setDepartmentList] = useState<any[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  // const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   const [showPopup, setShowPopup] = useState(false);
@@ -117,10 +117,6 @@ const StudentTimetableUpload = () => {
           {departmentList.map(dep => <option key={dep.id} value={dep.id}>{dep.name}</option>)}
         </select>
 
-        <select value={selectedAcademicYear} onChange={e => setSelectedAcademicYear(e.target.value)}>
-          <option value="">Academic Year</option>
-          {academicYears.map(y => <option key={y.id} value={y.id}>{`${y.start_year}-${y.end_year}`}</option>)}
-        </select>
 
         <select value={selectedSemester} onChange={e => setSelectedSemester(e.target.value)}>
           <option value="">Semester</option>

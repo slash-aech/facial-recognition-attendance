@@ -11,15 +11,15 @@ const FacultyTimetableUpload = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [uploadMessage, setUploadMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [showPreview, setShowPreview] = useState(false);
 
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('');
 
-  const [facultyList, setFacultyList] = useState<any[]>([]);
-  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
+  const [facultyList] = useState<any[]>([]);
+  const [academicYears] = useState<AcademicYear[]>([]);
   const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   const [showPopup, setShowPopup] = useState(false);
@@ -54,12 +54,12 @@ const FacultyTimetableUpload = () => {
   };
 
   const handleUpload = async () => {
-    setIsLoading(true);
-    setShowPreview(false);
+    // setIsLoading(true);
+    // setShowPreview(false);
     setUploadMessage('');
     setTimeout(() => {
-      setIsLoading(false);
-      setShowPreview(true);
+      // setIsLoading(false);
+      // setShowPreview(true);
       setUploadMessage('Upload successful! (dummy)');
     }, 2000);
   };
