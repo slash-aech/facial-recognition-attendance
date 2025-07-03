@@ -14,7 +14,7 @@ import FunctionTester from './pages/test'
 
 export default function App() {
   const [role, setRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const checkAuth = async () => {
       try {
