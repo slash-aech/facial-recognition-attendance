@@ -319,4 +319,53 @@ export const fetchStudentByDepartment = async (
   }
 };
 
+interface Subject {
+  subject: string;
+  similarity: number;
+}
+
+interface RecognitionResult {
+  box: {
+    x_min: number;
+    y_min: number;
+    x_max: number;
+    y_max: number;
+  };
+  subjects: Subject[];
+  execution_time: number;
+  landmarks: {
+    [key: string]: [number, number];
+  };
+}
+
+interface RecognizeFaceResponse {
+  result: RecognitionResult[];
+  image_id: string;
+}
+
+export const recognizeFace = async (
+  base64Image: string,
+  vTag?: string
+): Promise<RecognizeFaceResponse> => {
+  try {
+    const response = await axios.post<RecognizeFaceResponse>(
+      'http://https://aiec.guni.ac.in:4400/detect-and-recog',
+      {
+        image: base64Image,
+        vTag: vTag || null,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Error recognizing face:', error);
+    throw new Error('Face recognition failed');
+  }
+};
+
 export default api;
