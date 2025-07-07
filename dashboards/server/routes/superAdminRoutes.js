@@ -24,7 +24,5 @@ router.get('/semesters', getAllSemesters);
 
 router.get('/:instituteId/departments', getDepartmentsByInstitute);
 
-router.get('/:semesterId', getAcademicCalendarBySemester);
-
-router.get('/:semesterYearId', getSemestersBySemesterYearId)
+router.get('/get-semester/:semesterYearId', getSemestersBySemesterYearId)
 module.exports = router;

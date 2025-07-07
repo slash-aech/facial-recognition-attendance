@@ -83,8 +83,8 @@ export default function Login({
           const response = await faceLogin(faceBase64); // ✅ Use API call here
 
           // Save to localStorage
-          localStorage.setItem('userToken', response.token);
-          localStorage.setItem('userInfo', JSON.stringify(response.user));
+          localStorage.setItem('userInfo', (response.user.id
+          ));
           setStatus('Login successful!');
 
           onLogin(response.user.role); // ✅ Trigger login callback
@@ -116,13 +116,16 @@ export default function Login({
   };
 
   const handleBasicLogin = async () => {
-    try {
-      const res = await api.post('/auth/login', { email, password });
-      onLogin(res.data.role);
-    } catch {
-      setMessage('Login failed.');
-    }
-  };
+  try {
+    const res = await api.post('/auth/login', { email, password });
+
+    localStorage.setItem('userInfo', (res.data.user_id));
+
+    onLogin(res.data.role);
+  } catch {
+    setMessage('Login failed.');
+  }
+};
 
   return (
     <div className="auth-container">

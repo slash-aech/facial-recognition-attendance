@@ -10,7 +10,8 @@ app.use(express.urlencoded({ extended: true, limit: '500mb' }));
 
 app.use(cookieParser());
 app.use(cors({
-  origin: 'https://facial-recognition-attendance-3wlw.onrender.com',
+  // origin: 'https://facial-recognition-attendance-3wlw.onrender.com',
+  origin: 'http://localhost:5173', // Change to your frontend URL
   credentials: true
 }));
 
@@ -25,32 +26,42 @@ const timetableRoutes = require('./routes/timeTableRoutes')(payload => {
 });
 
 const authRoutes = require('./routes/auth');
-const classroomRoutes = require('./routes/classrooms');
-const attendanceRoutes = require('./routes/attendance');
+const classroomRoutes = require('./routes/facultyAttendanceOnOffRoute');
+const studentAttendanceRoutes = require('./routes/studentAttendanceRoutes');
 const facultyUploadRoutes = require('./routes/facultyUploadXLSX');
 const studentUploadRoutes = require('./routes/studentUploadXLSX');
 const faceRouter = require('./routes/faceRouter');
-const protectedRoute = require('./routes/protectedRoutes');
 const userRouters = require('./routes/userRouters');
 const superAdminRoutes = require('./routes/superAdminRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
-const facultyData = require('./routes/facultyData');
 const classData = require('./routes/class');
+const facultyRoutes = require('./routes/facultyTimetableRoutes');
+const studentRoutes = require('./routes/studentTimetableRoutes');
+const facultyAttendance = require('./routes/facultyAttendanceRoutes');
+const attendanceReportRoutes = require('./routes/attendanceReportRoutes');
+const profile = require('./routes/profile');
+const hodRoutes = require('./routes/hodRoutes');
 
 // ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/classrooms', classroomRoutes);
-app.use('/api/attendance', attendanceRoutes);
+app.use('/api/student-attendance', studentAttendanceRoutes);
 app.use('/api/student-data-upload', studentUploadRoutes);
 app.use('/api/faculty-data-upload', facultyUploadRoutes);
 app.use('/api', userRouters);
 app.use('/api/face', faceRouter);
-app.use('/api/api', protectedRoute);
 app.use('/api/superAdmin', superAdminRoutes);
-app.use('/api/timetable', timetableRoutes); // 👈 this should update `lastTimetablePayload`
+app.use('/api/timetable', timetableRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/faculty', facultyData);
+app.use('/api/faculty', facultyRoutes);
+app.use('/api/student', studentRoutes);
 app.use('/api/class', classData);
+app.use('/api/faculty-attendance', facultyAttendance);
+app.use('/api/report', attendanceReportRoutes);
+app.use('/api/profile', profile);
+app.use('/api/hod', hodRoutes);
+
+
 
 // ✅ DEBUG PAGE
 app.get('/debug/timetable', (req, res) => {

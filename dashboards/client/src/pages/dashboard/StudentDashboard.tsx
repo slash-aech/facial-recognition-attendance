@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from '../../styles/SuperAdminDashboard.module.css';
 import ClassroomManagement from '../../components/StudentComponents/classroomManagement';
-import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
-import TeacherReport from '../../components/StudentComponents/Report'
+import LogoutButton from '../../components/LogoutButton';
 import StudentProfile from '../../components/StudentComponents/ViewProfile'
 import TimetableViewer from '../../components/StudentComponents/timetableViewer';
 
 
 const SuperadminDashboard = () => {
-  const [activeSection, setActiveSection] = useState('faculty');
+  const [activeSection, setActiveSection] = useState('classroom');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -18,8 +17,6 @@ const SuperadminDashboard = () => {
         return <ClassroomManagement />;
         case 'timetable':
           return <TimetableViewer />;
-      case 'report':
-        return <TeacherReport />;
         case 'profile':
         return <StudentProfile />;
       default:
@@ -67,12 +64,6 @@ const SuperadminDashboard = () => {
               onClick={() => handleSectionClick('timetable')}
             >
               View Timetable
-            </li>
-            <li
-              className={activeSection === 'report' ? styles.active : ''}
-              onClick={() => handleSectionClick('report')}
-            >
-              Download Attendance Report
             </li>
             <li
               className={activeSection === 'profile' ? styles.active : ''}

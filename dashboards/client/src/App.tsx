@@ -92,36 +92,36 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole  }) => {
       <Route
         path="/student"
         element={
-          role === 'student' ? <StudentDashboard /> :  <StudentDashboard />
-          // role === 'student' ? <StudentDashboard /> : <Navigate to="/" replace />
+          // role === 'student' ? <StudentDashboard /> :  <StudentDashboard />
+          role === 'student' ? <StudentDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/teacher"
         element={
-          role === 'teacher' ? <TeacherDashboard /> : <TeacherDashboard />
-          // role === 'teacher' ? <TeacherDashboard /> : <Navigate to="/" replace />
+          // role === 'teacher' ? <TeacherDashboard /> : <TeacherDashboard />
+          role === 'teacher' ? <TeacherDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/admin"
         element={ 
-          role === 'admin' ? <AdminDashboard /> : <AdminDashboard />
-          // role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />
+          // role === 'admin' ? <AdminDashboard /> : <AdminDashboard />
+          role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/hod"
         element={
-          role === 'hod' ? <HODDashboard /> : <HODDashboard />
-          // role === 'hod' ? <HODDashboard /> : <Navigate to="/" replace />
+          // role === 'hod' ? <HODDashboard /> : <HODDashboard />
+          role === 'hod' ? <HODDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route
         path="/superadmin"
         element={
-          role === 'superadmin' ? <SuperadminDashboard /> : <SuperadminDashboard />
-          // role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
+          // role === 'superadmin' ? <SuperadminDashboard /> : <SuperadminDashboard />
+          role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
         }
       />
       <Route

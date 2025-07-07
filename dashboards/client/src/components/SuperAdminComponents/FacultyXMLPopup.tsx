@@ -220,7 +220,7 @@ const XMLPopup: React.FC<XMLPopupProps> = ({ file, onClose }) => {
 
   return (
     <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.5)',display:'flex',justifyContent:'center',alignItems:'center',zIndex:9999}}>
-      <div style={{background:'#fff',padding:20,borderRadius:12,maxWidth:'90%',maxHeight:'90vh',overflowY:'auto'}}>
+      <div style={{background:'#fff',padding:20,borderRadius:12,maxWidth:'90%',maxHeight:'90vh',overflowY:'auto', color:'black'}}>
         <h2>Faculty Timetable</h2>
 
         {error ? (

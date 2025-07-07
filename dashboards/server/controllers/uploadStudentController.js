@@ -1,24 +1,21 @@
+// routes/uploadStudentExcel.js
 const xlsx = require('xlsx');
-const db = require('../config/dbconfig'); // should expose `query` method
+const db = require('../config/dbconfig');
 
 const uploadStudentExcel = async (req, res) => {
   try {
     const fileBuffer = req.file?.buffer;
-    const instituteId = req.body.instituteId;
-    const deptId = req.body.deptId;
+    const { instituteId, deptId, semesterId } = req.body;
 
-    if (!fileBuffer || !instituteId || !deptId) {
-      return res.status(400).json({ success: false, error: 'File, Institute ID, or Department ID missing' });
+    if (!fileBuffer || !instituteId || !deptId || !semesterId) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
     const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet);
 
-
     const allowedGenders = ['M', 'F', 'O'];
-    const user_role = 'student'
-
     await db.query('BEGIN');
 
     for (const row of data) {
@@ -26,22 +23,40 @@ const uploadStudentExcel = async (req, res) => {
         user_id,
         full_name,
         email_id,
+        gender,
         mobile_no,
-        gender
+        class_short_name,
+        group_id,
+        parents_email_id,
+        parents_mobile_no,
+        address,
+        city,
+        state,
+        country,
       } = row;
 
-
-      // ✅ Gender check
-      const cleanGender = String(gender || '').toUpperCase();
-      if (!allowedGenders.includes(cleanGender)) {
-        throw new Error(`Invalid gender value for user_id ${user_id}: ${gender}`);
+      if (!user_id || !email_id || !full_name || !class_short_name) {
+        throw new Error(`Missing required fields for user_id: ${user_id}`);
       }
 
+      const cleanGender = String(gender || '').toUpperCase();
+      if (!allowedGenders.includes(cleanGender)) {
+        throw new Error(`Invalid gender: ${gender} for ${user_id}`);
+      }
+
+      // ✅ Insert into user_info
       await db.query(
         `INSERT INTO user_info (
-          user_id, full_name, email_id, mobile_no,
-          gender, user_role, institute_id, dept_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          user_id, full_name, email_id, mobile_no, gender,
+          institute_id, dept_id, user_role,
+          parents_email_id, parents_mobile_no,
+          address, city, state, country
+        ) VALUES (
+          $1, $2, $3, $4, $5,
+          $6, $7, 'student',
+          $8, $9,
+          $10, $11, $12, $13
+        )
         ON CONFLICT (user_id) DO NOTHING`,
         [
           user_id,
@@ -49,19 +64,45 @@ const uploadStudentExcel = async (req, res) => {
           email_id,
           mobile_no,
           cleanGender,
-          user_role,
           instituteId,
-          deptId
+          deptId,
+          parents_email_id,
+          parents_mobile_no,
+          address,
+          city,
+          state,
+          country,
         ]
       );
+
+      // ✅ Resolve class_id and timetable_id from class table
+      const classRes = await db.query(
+        `SELECT class_id, timetable_id FROM class 
+         WHERE short = $1 AND institute_id = $2 AND department_id = $3 LIMIT 1`,
+        [class_short_name, instituteId, deptId]
+      );
+
+      if (classRes.rowCount === 0) {
+        throw new Error(`Class with short name '${class_short_name}' not found`);
+      }
+
+      const { class_id, timetable_id } = classRes.rows[0];
+
+      // ✅ Insert into student_enrollment_information
+      await db.query(`
+          INSERT INTO student_enrollment_information (
+          class_id, group_id, semester_id, timetable_id, user_id
+          ) VALUES ($1, $2, $3, $4, $5)
+          ON CONFLICT (semester_id, user_id) DO NOTHING
+          `, [class_id, group_id, semesterId, timetable_id, user_id]);
     }
 
     await db.query('COMMIT');
-    return res.json({ success: true });
+    res.json({ success: true });
   } catch (err) {
     await db.query('ROLLBACK');
-    console.error('❌ Teacher upload error:', err.message);
-    return res.status(500).json({ success: false, error: err.message });
+    console.error('❌ Upload error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
 };
 

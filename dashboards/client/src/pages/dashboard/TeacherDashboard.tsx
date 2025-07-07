@@ -3,13 +3,13 @@ import styles from '../../styles/SuperAdminDashboard.module.css';
 
 import ClassroomManagement from '../../components/TeacherComponents/classroomManagement';
 import LogoutButton from '../../components/SuperAdminComponents/LogoutButton';
-import TeacherReport from '../../components/HODComponents/Report'
-import StudentProfile from '../../components/HODComponents/ViewProfile'
+import TeacherReport from '../../components/TeacherComponents/Report'
+import StudentProfile from '../../components/TeacherComponents/ViewProfile'
 import TimetableViewer from '../../components/TeacherComponents/timetableViewer';
 
 
 const SuperadminDashboard = () => {
-  const [activeSection, setActiveSection] = useState('faculty');
+  const [activeSection, setActiveSection] = useState('classroom');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 

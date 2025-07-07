@@ -2,7 +2,8 @@ import axios from "axios";
 import type { RegisterFacePayload } from './types';
 
 // Base API URL - change to production or development as needed
-const BASE_URL = "https://facial-recognition-attendance-backend.onrender.com/api"; // Localhost (you can switch to production if needed)
+// const BASE_URL = "https://facial-recognition-attendance-backend.onrender.com/api"; // Localhost (you can switch to production if needed)
+const BASE_URL = "http://localhost:10000/api"; // Local development URL, change to production URL when deploying
 
 // Create Axios instance with credentials
 const api = axios.create({
@@ -119,6 +120,7 @@ export async function fetchSemesters(filters?: { academicYearId?: string; instit
   if (filters?.instituteId) params.append("instituteId", filters.instituteId);
   const query = params.toString() ? `?${params.toString()}` : "";
   const response = await api.get(`${BASE_URL}/superAdmin/semesters${query}`);
+  console.log("Fetching semesters with filters:", filters, "Response:", response.data);
   return response.data; // Returns [{ id, name, ... }, ...]
 }
 
@@ -145,7 +147,7 @@ export interface Semester {
  * @returns Array of Semester objects
  */
 export const getSemestersBySemesterYear = async (semesterYearId: string): Promise<Semester[]> => {
-  const response = await axios.get(`${BASE_URL}/superAdmin/${semesterYearId}`);
+  const response = await axios.get(`${BASE_URL}/superAdmin/get-semester/${semesterYearId}`);
   return response.data; // Returns [{ id, semester_id, semester_number }, ...]
 };
 
@@ -195,13 +197,14 @@ export const uploadFacultyData = async (data: UploadFacultyDataParams): Promise<
 };
 
 // Payload to upload student data
-interface UploadStudentDataPayload {
-  rows: string[][];
+export interface UploadStudentDataPayload {
+  spreadsheet_id: string;
+  sheet_name: string;
   institute_id: string;
   dept_id: string;
-  semester_year_id: string;
-  academic_calendar_id: string;
+  semester_id: string;
 }
+
 
 /**
  * Uploads student data (usually from Excel rows).

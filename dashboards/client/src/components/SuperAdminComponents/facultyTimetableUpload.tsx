@@ -32,11 +32,13 @@ const FacultyTimetableUpload = () => {
   // const [semesterList, setSemesterList] = useState<Semester[]>([]);
 
   useEffect(() => {
+    console
     fetchAllInstitutes().then(setInstituteList).catch(console.error);
   }, []);
 
   useEffect(() => {
     if (selectedInstitute) {
+      console.log('Fetching departments for institute:', selectedInstitute);
       fetchDepartmentsByInstitute(selectedInstitute)
         .then(setDepartmentList)
         .catch(console.error);

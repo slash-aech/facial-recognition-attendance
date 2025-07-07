@@ -1,104 +1,181 @@
-// components/ClassroomManagement.tsx
 import { useState, useEffect } from 'react';
 import api from '../../api';
-import styles from  '../../styles/SuperAdminDashboard.module.css';
-import type { Classroom, AttendanceRecord } from '../../types';
+import styles from '../../styles/SuperAdminDashboard.module.css';
+
+interface ClassroomEntry {
+  lesson_id: string;  // ✅ Add this
+  classroom_id: string;
+  classroom_name: string;
+  subject: string;
+  start_time: string;
+  end_time: string;
+  period: string;
+  active: boolean;
+}
+
+
 
 const ClassroomManagement = () => {
-  const [selectedBatch, setSelectedBatch] = useState<string>('');
-  const [selectedClassroomId, setSelectedClassroomId] = useState<number | null>(null);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const userId = localStorage.getItem('userInfo');
+  console.log(`👤 User ID from localStorage: ${userId}`);
+  const [classrooms, setClassrooms] = useState<ClassroomEntry[]>([]);
   const [message, setMessage] = useState<string>('');
+  const [teachers, setTeachers] = useState<any[]>([]);
+const [selectedTeacherId, setSelectedTeacherId] = useState<string>(userId || '');
 
-  const fetchClassrooms = () => {
-    setMessage('Loading classrooms...');
-    api.get('/classrooms/all')
-      .then(res => {
-        if (Array.isArray(res.data)) setClassrooms(res.data);
-        else setClassrooms([res.data]);
-        setMessage('');
-      })
-      .catch(() => setMessage('Failed to load classrooms'));
-  };
+const fetchTeachers = async () => {
+  const res = await api.get('/hod/teachers');
+  setTeachers(res.data || []);
+};
+
+useEffect(() => {
+  fetchTeachers();
+}, []);
+
+
+  const fetchTodayTimetable = async () => {
+  try {
+    const todayDate = new Date().toISOString().slice(0, 10); // e.g. '2025-07-15'
+    const day = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    console.log(`📅 Fetching today's timetable for: ${todayDate}, user_id: ${userId}`);
+
+    const res = await api.get(`/faculty-attendance/faculty/active-today`, {
+      params: { user_id: selectedTeacherId, day, date: todayDate }
+
+    });
+
+    const rawData = res.data || [];
+
+    rawData.sort((a: ClassroomEntry, b: ClassroomEntry) =>
+      a.start_time.localeCompare(b.start_time)
+    );
+
+    const collapsed: ClassroomEntry[] = [];
+
+    for (let i = 0; i < rawData.length; i++) {
+      const current = rawData[i];
+
+      if (
+        collapsed.length > 0 &&
+        current.classroom_id === collapsed[collapsed.length - 1].classroom_id &&
+        current.subject === collapsed[collapsed.length - 1].subject &&
+        current.start_time === collapsed[collapsed.length - 1].end_time
+      ) {
+        collapsed[collapsed.length - 1].end_time = current.end_time;
+      } else {
+        collapsed.push({ ...current });
+      }
+    }
+
+    setClassrooms(collapsed);
+    setMessage('');
+  } catch (err) {
+    setMessage('Failed to load today\'s classes');
+  }
+};
+
 
   useEffect(() => {
-    fetchClassrooms();
+    fetchTodayTimetable();
   }, []);
 
-  useEffect(() => {
-    if (selectedClassroomId !== null) {
-      api.get(`/attendance/classroom/${selectedClassroomId}`)
-        .then(res => setAttendance(res.data))
-        .catch(() => setAttendance([]));
-    }
-  }, [selectedClassroomId]);
+  const startAttendance = (classroomId: string, period: string, lessonId: string) => {
+  if (!navigator.geolocation) {
+    alert('Geolocation not supported');
+    return;
+  }
 
-  const startAttendance = (classroom: Classroom) => {
-    if (!navigator.geolocation) {
-      alert('Geolocation not supported');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const radiusInput = prompt('Enter attendance radius in meters (default: 100):', '100');
-        const radius = parseInt(radiusInput || '100', 10);
-        api.patch(`/classrooms/${classroom.id}/start`, { latitude, longitude, radius })
-          .then(() => {
-            setMessage(`Started attendance for ${classroom.name}`);
-            fetchClassrooms();
-          })
-          .catch(() => setMessage('Failed to start attendance'));
-      },
-      () => alert('Location permission is required to start attendance')
-    );
-  };
+  if (!userId) {
+    alert('User ID missing');
+    return;
+  }
 
-  const stopAttendance = (classroom: Classroom) => {
-    api.patch(`/classrooms/${classroom.id}/stop`)
-      .then(() => {
-        setMessage(`Stopped attendance for ${classroom.name}`);
-        fetchClassrooms();
-      })
-      .catch(() => setMessage('Failed to stop attendance'));
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const { latitude, longitude } = pos.coords;
+      const radiusInput = prompt('Enter attendance radius in meters (default: 5):', '5');
+      const radius = parseInt(radiusInput || '5', 10);
+
+      const payload = { latitude, longitude, radius, userId, period, lesson_id: lessonId }; // ✅ Add lesson_id
+      console.log('📦 Sending PATCH /start with payload:', payload);
+
+      try {
+        console.log(`📍 Starting attendance for classroom ${classroomId} at period ${period}`);
+        await api.patch(`/classrooms/${classroomId}/start`, payload);
+        console.log('✅ Attendance started successfully');
+        setMessage('Attendance started');
+        fetchTodayTimetable();
+      } catch (err) {
+        console.error('❌ Failed to start attendance:', err);
+        setMessage('Failed to start attendance');
+      }
+    },
+    (error) => {
+      alert(`Location permission is required to start attendance\n - ${error}`);
+    }
+  );
+};
+
+
+  const stopAttendance = async (classroomId: string) => {
+    // console.log(`🛑 Stopping attendance for classroom ${classroomId}`);
+    try {
+      await api.patch(`/classrooms/${classroomId}/stop`, {user_id:userId});
+      // console.log('✅ Attendance stopped:', res.data);
+      setMessage('Attendance stopped');
+      fetchTodayTimetable();
+    } catch (err) {
+      // console.error('❌ Failed to stop attendance:', err);
+      setMessage('Failed to stop attendance');
+    }
   };
 
   return (
     <div className={styles.sectionWrapper}>
-      <div className={styles.headerRow}>
-        <select value={selectedBatch} onChange={e => setSelectedBatch(e.target.value)}>
-          <option value=''>Select Batch</option>
-          <option value='2022'>2022</option>
-          <option value='2023'>2023</option>
-        </select>
-      </div>
-      <h2 className={styles.sectionTitle}>Classroom Management</h2>
+      {teachers.length > 0 && (
+  <select value={selectedTeacherId} onChange={(e) => setSelectedTeacherId(e.target.value)}>
+    {teachers.map((t) => (
+      <option key={t.user_id} value={t.user_id}>
+        {t.full_name} ({t.email_id})
+      </option>
+    ))}
+  </select>
+)}
+
+      <h2 className={styles.sectionTitle}>Today's Classes - Attendance Management</h2>
       {message && <p>{message}</p>}
-      <ul className={styles.classroomList}>
-        {classrooms.map((c) => (
-          <li
-            key={c.id}
-            className={`${styles.gridItem} ${selectedClassroomId === c.id ? styles.activeItem : ''}`}
-            onClick={() => setSelectedClassroomId(c.id)}
-          >
-            {c.name} - Radius: {c.radius} meters
-            <div>
-              <button onClick={() => startAttendance(c)} className={styles.startBtn}>Start</button>
-              <button onClick={() => stopAttendance(c)} className={styles.stopBtn}>Stop</button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      {selectedClassroomId && (
-        <div className={styles.attendanceRecord}>
-          <h3>Attendance Records</h3>
-          <ul>
-            {attendance.map((record) => (
-              <li key={record.id}>{record.email} - {record.timestamp}</li>
-            ))}
-          </ul>
-        </div>
+
+      {classrooms.length === 0 ? (
+        <p>No classes scheduled for today or attendance not started.</p>
+      ) : (
+        <ul className={styles.classroomList}>
+          {classrooms.map((c) => (
+            <li key={`${c.classroom_id}-${c.period}`} className={styles.gridItem}>
+              <div><strong>{c.subject}</strong> in {c.classroom_name}</div>
+              <div>Time: {c.start_time} - {c.end_time}</div>
+              <div>Status: <span style={{ color: c.active ? 'green' : 'gray' }}>
+                {c.active ? 'Ongoing' : 'Not Started'}
+              </span></div>
+              <div style={{ marginTop: '0.5rem' }}>
+                <button
+                onClick={() => startAttendance(c.classroom_id, c.period, c.lesson_id)}
+                disabled={c.active}
+                className={styles.startBtn}
+              >
+                Start
+              </button>
+                <button
+                  onClick={() => stopAttendance(c.classroom_id)}
+                  disabled={!c.active}
+                  className={styles.stopBtn}
+                >
+                  Stop
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

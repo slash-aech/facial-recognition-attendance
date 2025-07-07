@@ -1,27 +1,34 @@
-import { useState } from 'react';
-
-const dummyTimetable = [
-  { id: 1, name: 'Math', startTime: '09:00', endTime: '10:00', attended: true, day: 'Monday' },
-  { id: 2, name: 'Physics', startTime: '10:00', endTime: '11:00', attended: false, day: 'Monday' },
-  { id: 3, name: 'Chemistry', startTime: '09:00', endTime: '10:00', attended: true, day: 'Tuesday' },
-  { id: 4, name: 'Biology', startTime: '11:00', endTime: '12:00', attended: false, day: 'Wednesday' },
-  { id: 5, name: 'English', startTime: '10:00', endTime: '11:00', attended: true, day: 'Thursday' },
-  { id: 6, name: 'CS', startTime: '11:00', endTime: '12:00', attended: false, day: 'Friday' },
-];
+import { useEffect, useState } from 'react';
+import api from '../../api';
 
 export default function TimetableViewer() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substring(0, 10));
+  const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString('en-CA'));
+  const [timetable, setTimetable] = useState<any[]>([]);
+
   const selectedDayName = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
 
-  const todayBase = dummyTimetable.filter(e => e.day === selectedDayName);
-  const todayTimetable = todayBase.flatMap((entry) => [
-    { ...entry, id: entry.id + 'a', name: `${entry.name} - Lecture` },
-    { ...entry, id: entry.id + 'b', name: `${entry.name} - Lab` },
-    { ...entry, id: entry.id + 'c', name: `${entry.name} - Tutorial` },
-  ]);
+  useEffect(() => {
+  const fetchTimetable = async () => {
+    try {
+      const user_id = localStorage.getItem('userInfo');
+      const res = await api.get('/faculty/timetable', {
+        params: { user_id, selectedDate }
+      });
+      setTimetable(res.data || []);
+    } catch (err) {
+      console.error('Error fetching timetable:', err);
+      setTimetable([]);
+    }
+  };
+
+  fetchTimetable();
+}, [selectedDate]); // 👈 triggers on date change
+
+
+  const todayTimetable = timetable.filter(e => e.day === selectedDayName);
 
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  const timeSlots = Array.from(new Set(dummyTimetable.map(e => `${e.startTime} - ${e.endTime}`))).sort();
+  const timeSlots = Array.from(new Set(timetable.map(e => `${e.startTime} - ${e.endTime}`))).sort();
 
   const tableStyle = {
     width: '100%',
@@ -33,12 +40,15 @@ export default function TimetableViewer() {
     border: '1px solid #ccc',
     padding: '0.6rem',
     textAlign: "center" as const,
+    verticalAlign: 'top',
+    backgroundColor: 'white',
+    color: 'black',
   };
 
   const headerStyle = {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: 'white',
     fontWeight: 'bold',
-    color:"black"
+    color: "black"
   };
 
   const attendedStyle = {
@@ -46,12 +56,26 @@ export default function TimetableViewer() {
     color: '#155724',
     fontWeight: '500',
   };
+  const weeklyStyle = {
+    backgroundColor: 'black',
+    color: 'white',
+  };
 
   const notAttendedStyle = {
     backgroundColor: '#f8d7da',
     color: '#721c24',
     fontWeight: '500',
   };
+
+  const renderCellContent = (entry: any) => (
+    <div style={{ textAlign: 'left', fontSize: '0.95rem' }}>
+      <div><strong>Subject:</strong> {entry.subject_short || entry.name}</div>
+      <div><strong>Batch:</strong> {entry.class || 'N/A'}</div>
+      <div><strong>Group:</strong> {entry.group || 'N/A'}</div>
+      <div><strong>Classroom:</strong> {entry.classroom || 'N/A'}</div> {/* ✅ ADDED */}
+    </div>
+  );
+
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
@@ -66,16 +90,16 @@ export default function TimetableViewer() {
       <table style={tableStyle}>
         <thead>
           <tr>
-            <th style={{ ...thTdStyle, ...headerStyle }}>Subject</th>
+            <th style={{ ...thTdStyle }}>Details</th>
             <th style={{ ...thTdStyle, ...headerStyle }}>Time</th>
             <th style={{ ...thTdStyle, ...headerStyle }}>Status</th>
           </tr>
         </thead>
         <tbody>
-          {todayTimetable.length > 0 ? todayTimetable.map((entry) => (
-            <tr key={entry.id}>
-              <td style={thTdStyle}>{entry.name}</td>
-              <td style={thTdStyle}>{entry.startTime} - {entry.endTime}</td>
+          {todayTimetable.length > 0 ? todayTimetable.map((entry, i) => (
+            <tr key={`${entry.startTime}-${entry.endTime}-${i}`}>
+              <td style={{...thTdStyle, ...(entry.attended ? attendedStyle : notAttendedStyle)}}>{renderCellContent(entry)}</td>
+              <td style={{...thTdStyle, ...(entry.attended ? attendedStyle : notAttendedStyle)}}>{entry.startTime} - {entry.endTime}</td>
               <td style={{ ...thTdStyle, ...(entry.attended ? attendedStyle : notAttendedStyle) }}>
                 {entry.attended ? 'Attended' : 'Not Attended'}
               </td>
@@ -100,12 +124,15 @@ export default function TimetableViewer() {
               <tr key={slot}>
                 <td style={thTdStyle}>{slot}</td>
                 {weekDays.map(day => {
-                  const match = dummyTimetable.find(
+                  const match = timetable.find(
                     e => `${e.startTime} - ${e.endTime}` === slot && e.day === day
                   );
                   return (
-                    <td key={`${slot}-${day}`} style={{ ...thTdStyle, ...(match?.attended ? attendedStyle : notAttendedStyle) }}>
-                      {match ? match.name : ''}
+                    <td key={`${slot}-${day}`} style={{ 
+                      ...thTdStyle, 
+                      ...(match?.attended ? attendedStyle : notAttendedStyle) 
+                    }}>
+                      {match ? renderCellContent(match) : ''}
                     </td>
                   );
                 })}

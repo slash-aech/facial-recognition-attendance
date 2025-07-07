@@ -1,9 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('../db');
+const pool = require('../config/dbconfig');
 const router = express.Router();
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 const dotenv = require('dotenv')
 dotenv.config();
 
@@ -47,20 +47,21 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
+  console.log(req.body)
   const { email, password } = req.body;
 
   try {
-   const [rows] = await pool.query('SELECT * FROM user_authentication WHERE email_id = $1', [email]);
-  const user = rows; // Extract first object
+  const result = await pool.query('SELECT * FROM user_authentication WHERE email_id = $1', [email]);
+  const user = result.rows[0]; // Extract first object
   if (!user || !(await bcrypt.compare(password, user.password))) {
-  return res.status(401).json({ error: 'Invalid credentials' });
+  return console.log("Invalid credentials"), res.status(401).json({ error: 'Invalid credentials' });
 }
 
-const [infoRows] = await pool.query('SELECT * FROM user_info WHERE id = $1', [user.user_info_id]);
+const infoRows = await pool.query('SELECT * FROM user_info WHERE id = $1', [user.user_info_id]);
   if(!infoRows){
   return res.status(401).json({ error: 'couldnt find extra info' });
 }
-const userInfo = infoRows; // Extract first object
+const userInfo = infoRows.rows[0]; // Extract first object
 
 const token = generateToken({ id: user.email_id, role: userInfo.user_role });
 
@@ -70,14 +71,33 @@ res.cookie('token', token, {
   sameSite: 'None',
   maxAge: 60 * 60 * 1000, // 1 hour
 });
-
-res.json({ role: userInfo.user_role });
+res.cookie('institute_id', userInfo.institute_id, {
+  httpOnly: false, // frontend needs access
+  secure: true,
+  sameSite: 'None',
+  maxAge: 60 * 60 * 1000,
+});
+res.cookie('department_id', userInfo.department_id, {
+  httpOnly: false,
+  secure: true,
+  sameSite: 'None',
+  maxAge: 60 * 60 * 1000,
+});
+res.json({
+  role: userInfo.user_role,
+  email_id: user.email_id,
+  user_id: userInfo.user_id, // or userInfo.id if needed
+  full_name: userInfo.full_name,
+});
 ;  
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Login failed' });
   }
 });
+
+
+
 router.post('/logout', async (req, res) => {
 res.clearCookie('token', {
   httpOnly: true,

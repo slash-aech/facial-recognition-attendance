@@ -13,7 +13,7 @@ const getUserById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const result = await db.query('SELECT * FROM user_info WHERE enrollment_number = $1', [id]);
+    const result = await db.query('SELECT * FROM user_info WHERE user_id = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -28,7 +28,7 @@ const getUserById = async (req, res) => {
 const changePasswordByUserInfoId = async (req, res) => {
   console.log("******************************************************");
   const { user_info_id, newPassword } = req.body;
-  console.log(req.body);
+  // console.log(req.body);
 
   // if (!enrollment_number || !newPassword) {
   //   return res.status(400).json({ message: 'enrollment_number and newPassword are required' });
@@ -37,7 +37,7 @@ const changePasswordByUserInfoId = async (req, res) => {
   try {
     // 1. Get user_info.id (UUID) from enrollment_number
     const userInfoResult = await db.query(
-      'SELECT id FROM user_info WHERE enrollment_number = $1',
+      'SELECT id FROM user_info WHERE user_id = $1',
       [user_info_id]
     );
     if (userInfoResult.rowCount === 0) {
@@ -115,6 +115,7 @@ const faceLogin = async (req, res) => {
       [email]
     );
     if (userQuery.rows.length === 0) {
+      console.log("User not found")
       return res.status(404).json({ message: 'User not found' });
     }
     const userInfo = userQuery.rows[0];
@@ -137,7 +138,7 @@ const faceLogin = async (req, res) => {
     }
     // 7. Generate token
     const token = jwt.sign(
-      { id: userInfo.id, email: userInfo.email_id, role: userInfo.user_role },
+      { id: userInfo.user_id, email: userInfo.email_id, role: userInfo.user_role },
       JWT_SECRET,
       { expiresIn: '30d' }
     );
@@ -145,7 +146,7 @@ const faceLogin = async (req, res) => {
       message: 'Face login successful',
       token,
       user: {
-        id: userInfo.id,
+        id: userInfo.user_id,
         email: userInfo.email_id,
         name: userInfo.full_name,
         role: userInfo.user_role,

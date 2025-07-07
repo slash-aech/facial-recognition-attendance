@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const timetablePool = require('../config/timetableDbPool');
 
 const insertTimetableData = async (parsedData, meta) => {
+
     const client = await timetablePool.connect();
     const timetableId = uuidv4();
 
@@ -116,6 +117,9 @@ const insertTimetableData = async (parsedData, meta) => {
             s => !!s.studentId
         );
 
+               
+
+
         // 11. LESSON
         const lessons = parsedData.filter(p => p.type === 'lesson');
 
@@ -128,43 +132,56 @@ const insertTimetableData = async (parsedData, meta) => {
 
         // Proceed with insert
         await insertMany(
-            lessons,
-            `INSERT INTO lesson (
+  lessons,
+  `INSERT INTO lesson (
     lesson_id, timetable_id, class_ids, subject_id, 
     periods_per_card, period_per_week, lesson_type, 
-    classroom_ids, group_ids, weeks_def_id, days_def_id
-  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-            l => [
-                l.id,
-                timetableId,
-                Array.isArray(l.classids) ? l.classids : l.classids?.split(',') || [],
-                l.subjectid,
-                l.periodspercard,
-                l.periodperweek,
-                l.periodspercard === 1 ? 'Lecture' : 'Lab',
-                Array.isArray(l.classroomids) ? l.classroomids : l.classroomids?.split(',') || [],
-                Array.isArray(l.groupids) ? l.groupids : l.groupids?.split(',') || [],
-                l.weeksdefid,
-                l.daysdefid
-            ]
-        );
+    classroom_ids, group_ids, teacher_ids, weeks_def_id, days_def_id
+  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+  l => {
+    const cleanArray = (input) => (
+      Array.isArray(input)
+        ? input.filter(Boolean)
+        : (input?.split(',').filter(Boolean) || [])
+    );
 
+    return [
+      l.id,
+      timetableId,
+      cleanArray(l.classids),
+      l.subjectid,
+      l.periodspercard,
+      l.periodperweek,
+      l.periodspercard === 1 ? 'Lecture' : 'Lab',
+      cleanArray(l.classroomids),
+      cleanArray(l.groupids),
+      cleanArray(l.teacherids),
+      l.weeksdefid,
+      l.daysdefid
+    ];
+  }
+);
 
-
-        // 12. CARD
-        await insertMany(
+        
+        // 12. Insert CARD
+            await insertMany(
             parsedData.filter(p => p.type === 'card'),
             `INSERT INTO card (lesson_id, period, weeks, days, timetable_id, classroom_ids)
-   VALUES ($1, $2, $3, $4, $5, $6)`,  // ← 7 placeholders
+            VALUES ($1, $2, $3, $4, $5, $6)`,
             c => [
                 c.lessonid,
-                c.period,
-                c.weeks,
-                c.days,
+                parseInt(c.period, 10),
+                parseInt(c.weeks || '0', 10),
+                c.days || '',
                 timetableId,
-                Array.isArray(c.classroomids) ? c.classroomids : c.classroomids?.split(',') || [],
-            ]
-        );
+                Array.isArray(c.classroomids)
+                ? c.classroomids
+                : c.classroomids?.split(',').filter(Boolean) || []
+            ],
+            c => !!c.lessonid && !!c.period
+            );
+
+
 
 
         // ✅ COMMIT all at once

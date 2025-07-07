@@ -97,12 +97,12 @@ const SuperadminDashboard = () => {
             >
               Download Attendance Report
             </li>
-            <li
+            {/* <li
               className={activeSection === 'institute' ? styles.active : ''}
               onClick={() => handleSectionClick('institute')}
             >
               Institute Management
-            </li>
+            </li> */}
             <li
               className={activeSection === 'profile' ? styles.active : ''}
               onClick={() => handleSectionClick('profile')}

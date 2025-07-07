@@ -401,6 +401,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: 16,
     borderRadius: 6,
     border: "1.5px solid #ccc",
+    backgroundColor: "#f9f9f9",
   },
   getDataButton: {
     backgroundColor: "#f39c12",
