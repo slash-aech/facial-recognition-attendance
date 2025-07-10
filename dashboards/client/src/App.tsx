@@ -11,6 +11,7 @@ import AdminDashboard from './pages/dashboard/AdminDashboard';
 import HODDashboard from './pages/dashboard/HODDashboard';
 import SuperadminDashboard from './pages/dashboard/SuperAdminDashboard';
 import FunctionTester from './pages/test'
+import MarkAttendance from './pages/Attendance';
 
 export default function App() {
   const [role, setRole] = useState<string | null>(null);
@@ -131,6 +132,7 @@ const AppRoutes: React.FC<AppRoutesProps> = ({ role, setRole  }) => {
           // role === 'superadmin' ? <SuperadminDashboard /> : <Navigate to="/" replace />
         }
       />
+      <Route path="/att" element={<MarkAttendance />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

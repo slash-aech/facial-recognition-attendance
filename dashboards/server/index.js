@@ -41,6 +41,7 @@ const facultyAttendance = require('./routes/facultyAttendanceRoutes');
 const attendanceReportRoutes = require('./routes/attendanceReportRoutes');
 const profile = require('./routes/profile');
 const hodRoutes = require('./routes/hodRoutes');
+const markAtttendanceRoutes = require('./routes/faceAttendanceMark');
 
 // ROUTES
 app.use('/api/auth', authRoutes);
@@ -60,6 +61,7 @@ app.use('/api/faculty-attendance', facultyAttendance);
 app.use('/api/report', attendanceReportRoutes);
 app.use('/api/profile', profile);
 app.use('/api/hod', hodRoutes);
+app.use('/api/mark-attendance', markAtttendanceRoutes);
 
 
 

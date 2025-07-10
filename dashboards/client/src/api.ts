@@ -368,4 +368,38 @@ export const recognizeFace = async (
   }
 };
 
+interface AttendanceResponse {
+  message: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+  timestamp: string;
+}
+
+export const markAttendance = async (imageBase64: string, token: string): Promise<AttendanceResponse | null> => {
+  try {
+    const response = await API.post<AttendanceResponse>(
+      `${BASE_URL}/mark-attendance/mark`,
+      { image: imageBase64 },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log('Attendance Success:', response.data);
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      console.error('Attendance Error:', error.response?.data || error.message);
+    } else {
+      console.error('Unknown Error:', error);
+    }
+    return null;
+  }
+};
+
 export default api;
