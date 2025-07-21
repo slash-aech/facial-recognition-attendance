@@ -23,7 +23,6 @@ Before you begin, make sure you have the following installed:
 ## 📁 Folder Structure
 
 ```
-
 project-root/
 ├── client/             # React-based web UI
 │   ├── src/
@@ -32,8 +31,7 @@ project-root/
 │   ├── index.js
 │   └── .env            # Environment config for DB and PORT
 └── README.md
-
-````
+```
 
 ---
 
@@ -46,10 +44,9 @@ Update the communication between frontend and backend:
 - In `client/src/api.ts`, change the base URL:
   ```ts
   const BASE_URL = "http://<YOUR_IP_OR_DOMAIN>:5000";
-````
+  ```
 
-* In `server/index.js`, configure CORS to allow frontend communication:
-
+- In `server/index.js`, configure CORS to allow frontend communication:
   ```js
   app.use(
     cors({
@@ -80,86 +77,54 @@ This connects your backend to a local PostgreSQL server.
 
 ## 🐘 Setting Up Local PostgreSQL
 
-1. **Install PostgreSQL** (if not already installed):
-   Use your platform's installer or package manager.
+### Step 1: Install PostgreSQL
 
-2. **Create database and user**:
+Use your platform's installer or package manager if not already installed.
 
----
+### Step 2: Create a Database and Import Schema
 
-### ✅ **Steps to Create a New Database from `.sql` File**
-
-#### **1. Open a Terminal / Command Prompt**
-
-#### **2. Login to `psql` as the PostgreSQL superuser:**
+#### A. Open Terminal and Login to `psql`:
 
 ```bash
 psql -U postgres
 ```
 
-> If your PostgreSQL user is different, replace `postgres` with your username.
+> Replace `postgres` with your PostgreSQL username if different.
 
----
-
-#### **3. Create a New Empty Database**
-
-Inside the `psql` shell:
+#### B. Create a New Database:
 
 ```sql
 CREATE DATABASE new_db_name;
 \q
 ```
 
----
-
-#### **4. Import Your `.sql` File into the New DB**
-
-From your terminal (outside of `psql`):
+#### C. Import the `.sql` File into the New DB:
 
 ```bash
 psql -U postgres -d new_db_name -f path/to/your_schema.sql
 ```
 
 Replace:
+- `new_db_name` → your target database name
+- `path/to/your_schema.sql` → path to your `.sql` file
 
-* `new_db_name` → your target database name
-* `path/to/your_schema.sql` → path to the `.sql` file
-
----
-
-### 🔄 Example:
+#### Example:
 
 ```bash
 psql -U postgres -d facial_attendance_db -f ./backup/schema.sql
 ```
 
----
+#### Troubleshooting:
 
-### ⚠️ If You See `permission denied` or `could not connect`:
-
-* Make sure PostgreSQL is running
-* Ensure the user has permission
-* You may need to specify `-h localhost` if connecting to local server
-
----
-
-
-3. **Update `.env`** accordingly:
-
-   ```env
-   DB_USER=myuser
-   DB_HOST=localhost
-   DB_NAME=attendance_db
-   DB_PASSWORD=mypassword
-   DB_PORT=5432
-   PORT=5000
-   ```
+- Make sure PostgreSQL service is running
+- Ensure correct user permissions
+- You may need to add `-h localhost` if needed
 
 ---
 
 ## 🚀 Hosting the Frontend (Client)
 
-Navigate to the `client` directory and build:
+Navigate to the `client` directory and build the React app:
 
 ```bash
 cd client
@@ -167,18 +132,18 @@ npm install
 npm run build
 ```
 
-This generates the static files inside `dist/`.
+This generates static files inside the `dist/` folder.
 
 ### Serve Options
 
-#### Option 1: Using `serve` (recommended for dev)
+#### Option 1: Using `serve` (Recommended for Dev)
 
 ```bash
 npm install -g serve
 serve -s dist -l 5173
 ```
 
-> To expose on LAN:
+> To expose it on LAN:
 
 ```bash
 serve -s dist -l 0.0.0.0:5173
@@ -191,9 +156,13 @@ cd dist
 python3 -m http.server 5173
 ```
 
-#### Option 3: Using Express.js (for production)
+#### Option 3: Using Express.js (For Production)
 
-You can copy the `dist/` folder into a `public/` folder inside a small Express app and serve from there.
+Copy the contents of `dist/` into a `public/` folder in a small Express app and serve using:
+
+```js
+app.use(express.static("public"));
+```
 
 ---
 
@@ -207,13 +176,13 @@ npm install
 node index.js
 ```
 
-> To run on a different port:
+> To specify the port manually:
 
 ```bash
 PORT=5000 node index.js
 ```
 
-Or make sure the `.env` contains:
+Or ensure the `.env` contains:
 
 ```env
 PORT=5000
@@ -227,37 +196,37 @@ Backend will now be live at: `http://localhost:5000`
 
 Once both frontend and backend are running:
 
-* Open `http://localhost:5173` or `http://<your_ip>:5173`
-* You should see the login screen and interact with the app.
+- Open `http://localhost:5173` or `http://<your_ip>:5173`
+- You should see the login page and be able to interact with the app.
 
 ---
 
 ## 🌐 Exposing to the Internet (Optional)
 
-You can use the following tools to expose your localhost:
+Use any of the following tools to expose your localhost temporarily:
 
-* **[ngrok](https://ngrok.com/)**:
+### A. Ngrok
 
-  ```bash
-  ngrok http 5173
-  ```
+```bash
+ngrok http 5173
+```
 
-* **[localtunnel](https://theboroer.github.io/localtunnel-www/)**:
+### B. LocalTunnel
 
-  ```bash
-  npx localtunnel --port 5173
-  ```
+```bash
+npx localtunnel --port 5173
+```
 
-* **[frp](https://github.com/fatedier/frp)**: Fast Reverse Proxy (more advanced)
+### C. Fast Reverse Proxy (frp)
 
-Or configure port forwarding + dynamic DNS (e.g., No-IP) on your router.
+For advanced users: [https://github.com/fatedier/frp](https://github.com/fatedier/frp)
+
+Or configure **port forwarding** + **dynamic DNS** using tools like [No-IP](https://www.noip.com/).
 
 ---
 
 ## 📋 Notes
 
-* Ensure ports `5173` (frontend) and `5000` (backend) are allowed through your firewall.
-* Both servers must remain running for the system to work.
-* Only logged-in users with registered face data will be able to interact properly.
-
----
+- Ensure ports `5173` (frontend) and `5000` (backend) are open in your firewall.
+- You can run both parts on the same or different machines—just update URLs accordingly.
+- Only users with registered face data can log in and mark attendance.
